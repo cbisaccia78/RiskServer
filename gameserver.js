@@ -7,18 +7,25 @@ const GameManager = function(id){
 
 GameManager.prototype = {
     
+    /*
+        ************
+        *  PRIVATE  *
+        ************
+    */
+    _state: "PENDING_START",
+    _wss : null,
     _init : async function(id){
         this.id = id
-        this.wss = new WebSocketServer({noServer: true})
-        this.wss.on('connection', function connection(ws){
+        this._wss = new WebSocketServer({noServer: true})
+        this._wss.on('connection', function connection(ws){
             //console.log('connected')
             ws.send("connected")
             ws.on('message', function message(data){
                 msg = JSON.parse(data)
                 console.log(`recieved message`)
                 switch(msg.type){
-                    case '1':
-                        ws.send(" I got your 1")
+                    case 'GET_INITIAL_STATE':
+                        ws.send(" Here's your initial state")
                         break
                     case '2':
                         ws.send(" I got your 2")
@@ -28,22 +35,38 @@ GameManager.prototype = {
                 }
             })
         })
-        this.wss.handleUpgrade(request, socket, head, function done(ws){
+        this._wss.handleUpgrade(request, socket, head, function done(ws){
             wss.emit('connection', ws, request)
         })
     },
     _cleanup : async function(){},
-    state: "PENDING_START",
-    wss : null,
+
+    /*
+        ************
+        *  PUBLIC  *
+        ************
+    */
     id: null,
-    start : async function(){},
-    end : function(){},
     addPlayer : function(user){
         //do some stuff to register user
-        if(this.state == "PENDING_START"){//good to go!
+        if(this._state == "PENDING_START"){//good to go!
             this.start()
         }
-    }
+    },
+    end : function(){},
+    getState : function(){
+        return this._state
+    },
+    isFull : function(){
+        return false
+    },
+    messageAll : function(data){
+        this.wss.send(data)
+    },
+    message : function(user_id, data){
+
+    },
+    start : async function(){},
 }
 
 module.exports = GameManager
