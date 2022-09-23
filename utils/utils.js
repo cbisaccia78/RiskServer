@@ -10,6 +10,7 @@ const RangeList = function(start, end){
 const gameURLParse = function(url){
     ret = 
     broken = url.split("/")
+    
     if(broken[0] != "gamesession" || broken.length != 3) return null
     return {
         game_id: broken[1],
