@@ -1,5 +1,7 @@
 const WebSocket = require("ws")
 const WebSocketServer = WebSocket.WebSocketServer
+const Game = require("./game")
+
 
 const GameServer = function(id){
     this._init(id)
@@ -17,9 +19,9 @@ GameServer.prototype = {
     _userIds : [],
     _init : async function(id){
         this.id = id
+        this.game = new Game(players)
         this._wss = new WebSocketServer({noServer: true})
         this._wss.on('connection', function connection(ws){
-            ws.send("connected")
             ws.on('message', function message(data){
                 msg = JSON.parse(data)
                 console.log(`recieved message`)
@@ -27,9 +29,9 @@ GameServer.prototype = {
                     case 'GET_STATE':
                         /*
                             This should only be sent once
-                            by the player who creates the game 
+                            by the client
                         */
-                        ws.send(" Here's your initial state")
+                        ws.send("state")
                         break
                     case 'ACTION':
                         ws.send(" I got your action")
@@ -38,7 +40,7 @@ GameServer.prototype = {
                         ws.send(" Not sure how to respond")
                 }
             })
-            this._notifyAll(JSON.stringify({type: "NEW_PLAYER"}))
+            this._notifyAll(JSON.stringify({type: "NEW_PLAYER", player: {name: 'playername', icon: "binaryImageData", globalPosition: this.Game.freeSpots.pop()}}))
         }.bind(this))
         
         this._wss.handleUpgrade(request, socket, head, function done(ws){
@@ -60,6 +62,7 @@ GameServer.prototype = {
         ************
     */
     id: null,
+    game : null,
     addPlayer : function(user){
         //do some stuff to register user
         if(this._state == "PENDING_START"){//good to go!
@@ -79,7 +82,9 @@ GameServer.prototype = {
     message : function(user_id, data){
 
     },
-    startGame : function(){},
+    startGame : function(){
+        this._state = "Running"
+    },
 }
 
 module.exports = GameServer
