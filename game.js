@@ -1,8 +1,16 @@
 import { configureStore } from "@reduxjs/toolkit"
+import { playerChangeReducer, turnChangeReducer} from "./reducers/gameReducers"
+import DoublyLL from "./utils/datastructures"
 
-const Game = function(gameServer){
-    this._that = gameServer
-    this._init(gameServer)
+const initialState = function(){
+    return {
+        players: new DoublyLL()//position 0
+    }
+}
+
+
+const Game = function(){
+    this._init()
 }
 
 Game.prototype = {
@@ -12,10 +20,12 @@ Game.prototype = {
         ************
     */
     _store : null,
-    _that : null,
     _init : function(){
         this._store = configureStore({
-            reducer: {}
+            reducer: {
+                players : playerChangeReducer,
+                turnChangeReducer
+            }
         })
     },
     /*
@@ -23,13 +33,4 @@ Game.prototype = {
         *  PUBLIC  *
         ************
     */
-    addPlayer : function(player){
-
-    },
-    addPlayers : function(players){
-
-    },
-    start : async function(){
-
-    }
 }
