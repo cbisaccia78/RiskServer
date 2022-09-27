@@ -1,9 +1,9 @@
 const playerChangeReducer = function(state, action){
     switch(action.type){
         case 'PLAYER_CHANGE/ADD':
-            return {...state, players: }
+            return {...state, players: player.}
         case 'PLAYER_CHANGE/REMOVE':
-            return {...state, players: }
+            return {...state, players: players.remove(action.player)}
         default:
             return state
     }

@@ -28,12 +28,14 @@ DoublyLL.prototype = {
         return this._vals[position]
     },
     next : function(){
-        
+
     },
     back : function(){
 
+    },
+    remove : function(item){
+        this._vals = this._vals.filter((val) => val != item)
     }
-
 }
 
 module.exports = {DoublyLL}
