@@ -5,53 +5,23 @@ const url = require('url')
 const parse = url.parse
 
 const express = require('express')
+const https = require('https')
 const http = require('http')
 const cors = require('cors')
+const fs = require('fs')
 const app = express()
-const { auth, requiredScopes } = require('express-oauth2-jwt-bearer');
 app.use(cors())
 const mountRoutes = require('./routes')
 const GameServer = require("./gameserver")
-/*
-
-
-
-
-// This route doesn't need authentication
-app.get('/api/public', function(req, res) {
-  res.json({
-    message: 'Hello from a public endpoint! You don\'t need to be authenticated to see this.'
-  });
-});
-
-// This route needs authentication
-app.get('/api/private', checkJwt, function(req, res) {
-  res.json({
-    message: 'Hello from a private endpoint! You need to be authenticated to see this.'
-  });
-});
-
-const checkScopes = requiredScopes('read:messages');
-
-app.get('/api/private-scoped', checkJwt, checkScopes, function(req, res) {
-  res.json({
-    message: 'Hello from a private endpoint! You need to be authenticated and have a scope of read:messages to see this.'
-  });
-});
-
-*/
+const { response } = require("express")
 
 mountRoutes(app)
 
-
-// Authorization middleware. When used, the Access Token must
-// exist and be verified against the Auth0 JSON Web Key Set.
-
-const checkJwt = auth({
-    audience: 'YOUR_API_IDENTIFIER',
-    issuerBaseURL: `https://YOUR_DOMAIN/`,
-  });
-
+/*const options = {
+    key: fs.readFileSync('keys/genericprivate.pem'),
+    cert: fs.readFileSync('keys/generic-cert.pem')
+}
+const server = https.createServer(options, app)*/
 const server = http.createServer(app)
 
 
@@ -60,7 +30,25 @@ const idGameMap = new Map()
 
 server.on('upgrade', function upgrade(request, socket, head){ //client wants a websocket protocol (how we communicate)
     /*
-    all this logic needs to be handled in a seperate worker thread eventually
+        (all this logic needs to be handled in a seperate worker thread eventually)
+
+        authenticate user, then send them a JWT which 
+        the user should include in every subsequent ws message 
+
+        example response on successful authentication:
+
+            HTTP/1.1 200 OK
+            Content-Type: application/json;charset=UTF-8
+            Cache-Control: no-store
+            Pragma: no-cache
+
+            {
+                "access_token":"mF_9.B5f-4.1JqM",
+                "token_type":"Bearer",
+                "expires_in":3600, //optional
+                "refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA" //optional
+            }
+
     */
     console.log('detected upgrade')
     const {pathname} = parse(request.url)
