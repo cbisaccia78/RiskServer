@@ -27,27 +27,15 @@ const server = http.createServer(app)
 
 const availableGameIDs = RangeList(1, 10) //10 concurrent games allowed ATM 
 const idGameMap = new Map()
+const userSet = new Set()
+userSet.add(1) // for testing purposes
 
 server.on('upgrade', function upgrade(request, socket, head){ //client wants a websocket protocol (how we communicate)
     /*
         (all this logic needs to be handled in a seperate worker thread eventually)
 
         authenticate user, then send them a JWT which 
-        the user should include in every subsequent ws message 
-
-        example response on successful authentication:
-
-            HTTP/1.1 200 OK
-            Content-Type: application/json;charset=UTF-8
-            Cache-Control: no-store
-            Pragma: no-cache
-
-            {
-                "access_token":"mF_9.B5f-4.1JqM",
-                "token_type":"Bearer",
-                "expires_in":3600, //optional
-                "refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA" //optional
-            }
+        the user should include in every subsequent ws message
 
     */
     console.log('detected upgrade')
@@ -63,9 +51,13 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
         if(gameServer.isFull()){ //to handle race conditions? (two people click on game at same time?)
             socket.destroy()
         }else{
-            gameServer.addPlayer(user_id) //NEED AUTHENTICATION!!!!!!!!
-            if(gameServer.isFull()){ 
-                gameServer.startGame()
+            if(userSet.has(user_id)){ //user has already logged in
+                gameServer.addPlayer(user_id) //NEED AUTHENTICATION!!!!!!!!
+                if(gameServer.isFull()){ 
+                    gameServer.startGame()
+                }
+            }else{//not logged in.
+                socket.destroy()
             }
         }
         //add player to game
@@ -77,6 +69,8 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
         idGameMap[game_id] = gameServer
     }
 })
+
+module.exports = { userSet }
 
 server.listen(3001, ()=>{
     console.log('listening on port 3001...')

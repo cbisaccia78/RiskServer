@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 
 const db = require('../db')
+const {userSet} = require('../app')
 
 router.get("/login/:username/:password", async (req, res) => {
     //const { username, password } = req.params
@@ -16,9 +17,15 @@ router.get("/login/:username/:password", async (req, res) => {
     
 })
 router.post('/login', async (req, res) => {
-    //const { rows } = await db.query(`select * from users where id=${id};`)
-    console.log("recieved login request")
-    res.send({success: true})
+    //const { rows } = await db.query(`select * from users where username=${username} and password=${password};`)
+    const creds = req.body.JSON()
+    console.log(creds)
+    var success = true
+    if(success){
+        //userSet.add(creds.username)
+    }
+    
+    res.send({success: success})
 })
 
 module.exports = router

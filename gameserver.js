@@ -19,7 +19,7 @@ GameServer.prototype = {
     _userIds : [],
     _init : async function(id){
         this.id = id
-        this.game = new Game(players)
+        this.game = new Game(this)
         this._wss = new WebSocketServer({noServer: true})
         this._wss.on('connection', function connection(ws){
             ws.on('message', function message(data){
@@ -84,6 +84,7 @@ GameServer.prototype = {
     },
     startGame : function(){
         this._state = "Running"
+        this.game.start()
     },
 }
 
