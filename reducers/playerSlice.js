@@ -7,13 +7,13 @@ const initialPlayerState = function(){
 }
 
 const playerChangeReducer = function(state=initialPlayerState(), action){
+    const playerList = _.cloneDeep(state.players.playerList)
+    const turn_stack = _.cloneDeep(state.players.turn_stack)
     switch(action.type){
         case 'PLAYER_CHANGE/ADD':
-            var playerList = _.cloneDeep(state.players.playerList)
             playerList.splice(action.player.table_position, 0, action.player)
             return {...state, players: {playerList: playerList}}
         case 'PLAYER_CHANGE/REMOVE':
-            var playerList = _.cloneDeep(state.players)
             playerList.splice(action.player.table_position, 1)
             return {...state, players: newplayers}
         default:

@@ -1,9 +1,11 @@
 import { configureStore, combineReducers} from "@reduxjs/toolkit"
+import { deckReducer } from "./reducers/deckSlice"
 import { playerChangeReducer} from "./reducers/playerSlice"
 
 
 const rootReducer = combineReducers({
     players: playerChangeReducer,
+    deck: deckReducer
 })
 
 
@@ -23,7 +25,7 @@ Game.prototype = {
             reducer: rootReducer
         })
         this._unsubscribe = this._store.subscribe(()=>{
-            console.log('done listening')
+            console.log('State after dispatch: ', this._store.getState())
         })
     },
     _unsubscribe : null,
@@ -44,9 +46,15 @@ Game.prototype = {
             player: player
         })
     },
+    handleAction : function(action){
+        this._store.dispatch(action)
+    },
     start : function(){
         this._store.dispatch({
             type: "INITIALIZE_GAME"
         })
+    },
+    getState : function(){
+        return this._store.getState()
     }
 }

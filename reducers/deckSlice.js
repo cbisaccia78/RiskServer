@@ -1,6 +1,6 @@
 
 const initialDeckState = function(){
-    return //shuffled deck
+    return {} //shuffled deck
 }
 
 

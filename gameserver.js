@@ -29,18 +29,27 @@ GameServer.prototype = {
                     case 'GET_STATE':
                         /*
                             This should only be sent once
-                            by the client
+                            by the client as they are first joining
                         */
-                        ws.send("state")
+                        ws.send(JSON.stringify(this.game.getState()))
                         break
                     case 'ACTION':
+                        this.game.handleAction(msg.action)
+                        this._notifyAll(data) //make sure clients update their state
                         ws.send(" I got your action")
                         break
                     default:
                         ws.send(" Not sure how to respond")
                 }
             })
-            this._notifyAll(JSON.stringify({type: "NEW_PLAYER", player: {name: 'playername', icon: "binaryImageData", globalPosition: this.Game.freeSpots.pop()}}))
+            this._notifyAll(JSON.stringify({
+                type: "NEW_PLAYER", 
+                player: {
+                    name: 'playername', 
+                    icon: "binaryImageData",
+                     globalPosition: this.Game.freeSpots.pop()
+                }
+            }), [player])
         }.bind(this))
         
         this._wss.handleUpgrade(request, socket, head, function done(ws){
@@ -50,8 +59,10 @@ GameServer.prototype = {
     _initState : function(){
 
     },
-    _cleanup : async function(){},
-    _notifyAll : async function(payload){
+    _cleanup : async function(){
+
+    },
+    _notifyAll : async function(payload, exclude=[]){
         this._wss.forEach(function(ws){
             ws.send(payload)
         })
