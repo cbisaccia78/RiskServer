@@ -1,10 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit"
 import { playerChangeReducer, turnChangeReducer} from "./reducers/gameReducers"
-import DoublyLL from "./utils/datastructures"
+import PlayerRing from "./utils/datastructures"
 
 const initialState = function(){
     return {
-        players: new DoublyLL()//position 0
+        players: new PlayerRing()//position 0
     }
 }
 

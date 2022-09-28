@@ -1,9 +1,15 @@
+const _ = require('lodash')
+
 const playerChangeReducer = function(state, action){
     switch(action.type){
         case 'PLAYER_CHANGE/ADD':
-            return {...state, players: player.}
+            newplayers = _.cloneDeep(state.players)
+            newplayers.splice(action.player.table_position, 0, action.player)
+            return {...state, players: newplayers}
         case 'PLAYER_CHANGE/REMOVE':
-            return {...state, players: players.remove(action.player)}
+            newplayers = _.cloneDeep(state.players)
+            newplayers.splice(action.player.table_position, 1)
+            return {...state, players: newplayers}
         default:
             return state
     }

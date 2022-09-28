@@ -1,25 +1,41 @@
-const DoublyLL = function(values=[]){
-    this._vals = values
+const Ring = function(){
     this._init()
 }
 
-DoublyLL.prototype = {
+Ring.prototype = {
+    _init : function(){
+
+    },
+    forwards : function(){
+
+    },
+    backwards : function(){
+
+    }
+}
+
+const PlayerRing = function(length=6){
+    this.length = length
+    this._init()
+}
+
+PlayerRing.prototype = {
     /*
         ************
-        *  PRIVATE  *
+        *  PRIVATE *
         ************
     */
-    _pos: 0, //0-indexed
+    _pos: null, //0-indexed
     _vals: [], 
     _init: function(){
-
+        this._pos = new Ring(this.length)
     },
     /*
         ************
         *  PUBLIC  *
         ************
     */
-    
+    length : 6,
     current : function(){
         return this._vals[this._pos]
     },
@@ -28,7 +44,7 @@ DoublyLL.prototype = {
         return this._vals[position]
     },
     next : function(){
-
+        
     },
     back : function(){
 
@@ -38,4 +54,4 @@ DoublyLL.prototype = {
     }
 }
 
-module.exports = {DoublyLL}
+module.exports = {PlayerRing}
