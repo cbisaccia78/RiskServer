@@ -69,7 +69,7 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
     }
 })
 
-module.exports = { userSet }
+module.exports = { userSet, idGameMap}
 
 server.listen(3001, ()=>{
     console.log('listening on port 3001...')
