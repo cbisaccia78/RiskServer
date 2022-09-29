@@ -1,6 +1,6 @@
-import { configureStore, combineReducers} from "@reduxjs/toolkit"
-import { deckReducer } from "./reducers/deckSlice"
-import { playerChangeReducer} from "./reducers/playerSlice"
+const { configureStore, combineReducers} = require("@reduxjs/toolkit")
+const deckReducer = require("./reducers/deckSlice")
+const playerChangeReducer = require("./reducers/playerSlice")
 
 
 const rootReducer = combineReducers({
@@ -58,3 +58,5 @@ Game.prototype = {
         return this._store.getState()
     }
 }
+
+module.exports = Game

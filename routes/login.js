@@ -17,15 +17,16 @@ router.get("/login/:username/:password", async (req, res) => {
     
 })
 router.post('/login', async (req, res) => {
-    //const { rows } = await db.query(`select * from users where username=${username} and password=${password};`)
-    const creds = req.body.JSON()
-    console.log(creds)
-    var success = true
-    if(success){
-        //userSet.add(creds.username)
+    const {username, password} = req.body.JSON()
+    const { rows } = await db.query(`select * from users where username=${username} and password=${password};`)
+    if(rows.length == 1){
+        userSet.add(username)
+        res.send({success: true})
+    }else{
+        res.send({success: false})
     }
     
-    res.send({success: success})
+    
 })
 
 module.exports = router

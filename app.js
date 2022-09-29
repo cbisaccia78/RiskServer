@@ -13,7 +13,6 @@ const app = express()
 app.use(cors())
 const mountRoutes = require('./routes')
 const GameServer = require("./gameserver")
-const { response } = require("express")
 
 mountRoutes(app)
 
@@ -28,7 +27,7 @@ const server = http.createServer(app)
 const availableGameIDs = RangeList(1, 10) //10 concurrent games allowed ATM 
 const idGameMap = new Map()
 const userSet = new Set()
-userSet.add(1) // for testing purposes
+//userSet.add(1) // for testing purposes
 
 server.on('upgrade', function upgrade(request, socket, head){ //client wants a websocket protocol (how we communicate)
     /*
