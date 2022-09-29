@@ -26,42 +26,55 @@ GameServer.prototype = {
                 msg = JSON.parse(data)
                 console.log(`recieved message`)
                 switch(msg.type){
-                    case 'GET_STATE':
+                    case 'GET_INITIAL_STATE':
                         /*
                             This should only be sent once
                             by the client as they are first joining
                         */
-                        ws.send(JSON.stringify(this.game.getState()))
+                        this.game.addPlayer({
+                            name: 'testplayer',
+                            color: 'blue', //hardcoded for now
+                            secretMission: 'kill yellow', //hardcoded for now 
+                            icon: "binaryImageData",
+                            globalPosition: this.game.freeSpots.pop()
+                        })//hardcoded for now, should eventually be contained in msg.player
+                        ws.send(JSON.stringify({type: "INITIALIZE_GAME", state: this.game.getState()}))
+                        this._notifyAll(JSON.stringify({
+                            type: "PLAYER_CHANGE/ADD", 
+                            player: {
+                                name: 'playername',
+                                color: 'blue', //hardcoded for now
+                                secretMission: 'kill yellow', //hardcoded for now 
+                                icon: "binaryImageData",
+                                globalPosition: this.game.getPlayerPos('playername')//??????
+                            }
+                        }), [ws])
                         break
+                    case 'PLAYER_CHANGE/REMOVE':
+                        this.game.removePlayer('playername')//?????????
+                        this._notifyAll(JSON.stringify({
+                            type: "PLAYER_CHANGE/REMOVE", 
+                            player: {
+                                name: 'playername'//is more information needed?
+                            }
+                        }), [ws])
                     case 'ACTION':
                         this.game.handleAction(msg.action)
-                        this._notifyAll(data) //make sure clients update their state
+                        this._notifyAll(data, [ws]) //make sure clients update their state
                         ws.send(" I got your action")
                         break
                     default:
                         ws.send(" Not sure how to respond")
                 }
             })
-            this._notifyAll(JSON.stringify({
-                type: "NEW_PLAYER", 
-                player: {
-                    name: 'playername', 
-                    icon: "binaryImageData",
-                     globalPosition: this.Game.freeSpots.pop()
-                }
-            }), [player])
+            
         }.bind(this))
         
         this._wss.handleUpgrade(request, socket, head, function done(ws){
             wss.emit('connection', ws, request)
         })
     },
-    _initState : function(){
-
-    },
-    _cleanup : async function(){
-
-    },
+    _cleanup : async function(){},
     _notifyAll : async function(payload, exclude=[]){
         this._wss.forEach(function(ws){
             ws.send(payload)
@@ -80,6 +93,9 @@ GameServer.prototype = {
             this.start()
         }
     },
+    removePlayer : function(user){
+        //do something
+    },
     end : function(){},
     getState : function(){
         return this._state
@@ -87,12 +103,8 @@ GameServer.prototype = {
     isFull : function(){
         return false
     },
-    messageAll : function(data){
-        
-    },
-    message : function(user_id, data){
-
-    },
+    messageAll : function(data){},
+    message : function(user_id, data){},
     startGame : function(){
         this._state = "Running"
         this.game.start()
