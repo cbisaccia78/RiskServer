@@ -1,9 +1,13 @@
 const _ = require('lodash')
 
+
 const initialPlayerState = function(){
+
     return {
-        players: {playerList: [0,0,0,0,0,0], turn_stack: []}//6 players,
-    }
+        playerList: [null,null,null,null,null,null],
+        turn_stack: []
+    }//6 players,
+    
 }
 
 const playerChangeReducer = function(state=initialPlayerState(), action){
@@ -12,10 +16,10 @@ const playerChangeReducer = function(state=initialPlayerState(), action){
     switch(action.type){
         case 'PLAYER_CHANGE/ADD':
             playerList.splice(action.player.table_position, 0, action.player)
-            return {...state, players: {playerList: playerList}}
+            return {playerList: playerList, turn_stack: turn_stack}
         case 'PLAYER_CHANGE/REMOVE':
             playerList.splice(action.player.table_position, 1)
-            return {...state, players: newplayers}
+            return {playerList: playerList, turn_stack: turn_stack}
         default:
             return state
     }

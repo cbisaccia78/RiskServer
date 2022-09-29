@@ -17,4 +17,10 @@ const gameURLParse = function(url){
         user_id: broken[2]
     }
 }
-module.exports = { RangeList, gameURLParse }
+
+const randomObjectValue= function(object){
+    const vals = Object.values(object) 
+    return vals[Math.floor(Math.random()*vals.length)]
+}
+
+module.exports = { RangeList, gameURLParse, randomObjectValue}
