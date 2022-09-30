@@ -11,10 +11,10 @@ const gameURLParse = function(url){
     ret = 
     broken = url.split("/")
     
-    if(broken[0] != "gamesession" || broken.length != 3) return null
+    if(broken[1] != "gamesession" || broken.length != 4) return null
     return {
-        game_id: broken[1],
-        user_id: broken[2]
+        game_id: broken[2],
+        user_id: broken[3]
     }
 }
 

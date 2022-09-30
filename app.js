@@ -1,6 +1,6 @@
 
 
-const {RangeList, gameURLParse} = require("./utils/utils")
+const gameURLParse = require("./utils/utils").gameURLParse
 const url = require('url')
 const parse = url.parse
 
@@ -13,6 +13,8 @@ const app = express()
 app.use(cors())
 const mountRoutes = require('./routes')
 const GameServer = require("./gameserver")
+const {idGameMap, userSet, availableGameIDs} = require("./sessioncache")
+const db = require("./db")
 
 mountRoutes(app)
 
@@ -21,12 +23,19 @@ mountRoutes(app)
     cert: fs.readFileSync('keys/generic-cert.pem')
 }
 const server = https.createServer(options, app)*/
-const server = http.createServer(app)
+const server = http.createServer(app);
 
+/*get active games when server restarts to resume (implement this properly eventually)
+(async function(){
+    const { rows } = await db.query(`select * from games where active=true;`)
+    rows.forEach(function(game){
+        idGameMap.set(game.id, new GameServer(game.id, game))
+    })
+    console.log(idGameMap)
+})()
+*/
+   
 
-const availableGameIDs = RangeList(1, 10) //10 concurrent games allowed ATM 
-const idGameMap = new Map()
-const userSet = new Set()
 //userSet.add(1) // for testing purposes
 
 server.on('upgrade', function upgrade(request, socket, head){ //client wants a websocket protocol (how we communicate)
@@ -39,13 +48,17 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
     */
     console.log('detected upgrade')
     const {pathname} = parse(request.url)
+    //console.log(pathname)
     gameValues = gameURLParse(pathname)
+    //console.log(gameValues)
     if(gameValues === null){//this needs more security
+        console.log('could not parse url')
         socket.destroy()
         return
     }
-    const {game_id, user_id} = gameValues
+    var {game_id, user_id} = gameValues
     if(game_id in idGameMap.keys()){
+        console.log('game_id in cache')
         gameServer = idGameMap[game_id]
         if(gameServer.isFull()){ //to handle race conditions? (two people click on game at same time?)
             socket.destroy()
@@ -56,20 +69,20 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
                     gameServer.startGame()
                 }
             }else{//not logged in.
+                console.log('user not logged in')
                 socket.destroy()
             }
         }
         //add player to game
         
     }else{
+        console.log('creating new game')
         game_id = availableGameIDs.pop()
-        gameServer = new GameServer(game_id)
+        gameServer = new GameServer(game_id, {request: request, socket: socket, head: head})
         gameServer.addPlayer(user_id)
         idGameMap[game_id] = gameServer
     }
 })
-
-module.exports = { userSet, idGameMap}
 
 server.listen(3001, ()=>{
     console.log('listening on port 3001...')

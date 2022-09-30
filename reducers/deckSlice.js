@@ -4,6 +4,7 @@ const randomObjectValue = require("../utils/utils").randomObjectValue
 
 const initialDeckState = function(){
     deck = {territories: [], secret_missions: []}
+    /*
     TERRITORIES.foreach((territory)=>{
         deck.territories.push({territory: territory, unit: randomObjectValue(UNITS)})
     })
@@ -12,6 +13,7 @@ const initialDeckState = function(){
     SECRET_MISSIONS.foreach((secret_mission)=>{
         deck.secret_missions.push(secret_mission)
     })
+    */
     return deck //shuffled deck
 }
 
@@ -27,4 +29,4 @@ const deckReducer = function(state=initialDeckState(), action){
     }
 }
 
-module.exports = {deckReducer}
+module.exports = deckReducer

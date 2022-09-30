@@ -3,8 +3,10 @@ const WebSocketServer = WebSocket.WebSocketServer
 const Game = require("./game")
 
 
-const GameServer = function(id){
-    this._init(id)
+const GameServer = function(id, connectionObject, game=null){
+    this.id = id
+    this.conn = connectionObject
+    this._init(game)
 }
 
 GameServer.prototype = {
@@ -17,9 +19,8 @@ GameServer.prototype = {
     _state: "PENDING_START",
     _wss : null,
     _userIds : [],
-    _init : async function(id){
-        this.id = id
-        this.game = new Game(this)
+    _init : function(game){
+        this.game = game ? game : new Game(this.id)
         this._wss = new WebSocketServer({noServer: true})
         this._wss.on('connection', function connection(ws){
             ws.on('message', function message(data){
@@ -31,12 +32,12 @@ GameServer.prototype = {
                             This should only be sent once
                             by the client as they are first joining
                         */
+                        console.log('init state')
                         this.game.addPlayer({
                             name: 'testplayer',
                             color: 'blue', //hardcoded for now
                             secretMission: 'kill yellow', //hardcoded for now 
-                            icon: "binaryImageData",
-                            globalPosition: this.game.freeSpots.pop()
+                            icon: "binaryImageData"
                         })//hardcoded for now, should eventually be contained in msg.player
                         ws.send(JSON.stringify({type: "INITIALIZE_GAME", state: this.game.getState()}))
                         this._notifyAll(JSON.stringify({
@@ -59,20 +60,23 @@ GameServer.prototype = {
                             }
                         }), [ws])
                     case 'ACTION':
+                        console.log('action')
                         this.game.handleAction(msg.action)
                         this._notifyAll(data, [ws]) //make sure clients update their state
                         ws.send(" I got your action")
                         break
                     default:
+                        console.log('default')
                         ws.send(" Not sure how to respond")
                 }
-            })
+            }.bind(this))
             
         }.bind(this))
         
-        this._wss.handleUpgrade(request, socket, head, function done(ws){
-            wss.emit('connection', ws, request)
-        })
+        this._wss.handleUpgrade(this.conn.request, this.conn.socket, this.conn.head, function done(ws){
+            this._wss.emit('connection', ws, this.conn.request)
+        }.bind(this))
+        
     },
     _cleanup : async function(){},
     _notifyAll : async function(payload, exclude=[]){
@@ -89,12 +93,11 @@ GameServer.prototype = {
     game : null,
     addPlayer : function(user){
         //do some stuff to register user
-        if(this._state == "PENDING_START"){//good to go!
-            this.start()
-        }
+        this.game.addPlayer(user)
     },
     removePlayer : function(user){
         //do something
+        this.player.removePlayer(user)
     },
     end : function(){},
     getState : function(){

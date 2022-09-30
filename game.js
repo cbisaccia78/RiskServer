@@ -3,14 +3,14 @@ const deckReducer = require("./reducers/deckSlice")
 const playerChangeReducer = require("./reducers/playerSlice")
 
 
-const rootReducer = combineReducers({
+const reducer = combineReducers({
     players: playerChangeReducer,
     deck: deckReducer
 })
 
 
-const Game = function(){
-    this._init()
+const Game = function(id){
+    this._init(id)
 }
 
 Game.prototype = {
@@ -20,9 +20,10 @@ Game.prototype = {
         ************
     */
     _store : null, //redux store
-    _init : function(){
+    _init : function(id){
+        this.id = id
         this._store = configureStore({
-            reducer: rootReducer
+            reducer
         })
         this._unsubscribe = this._store.subscribe(()=>{
             console.log('State after dispatch: ', this._store.getState())

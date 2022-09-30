@@ -1,11 +1,25 @@
 const express = require('express')
 const router = express.Router()
-const idGameMap = require('../app').idGameMap
+const idGameMap = require('../sessioncache').idGameMap
+
 
 const db = require('../db')
 
-router.get('/active', (req, res) => {
-    res.send(JSON.stringify(idGameMap.values()))
+router.get('/active', function(req, res){
+    console.log(idGameMap)
+    const ret = []
+    const iter = idGameMap.entries()
+    var n = iter.next()
+    while(!n.done){
+        ret.push(n.value[1])
+        n = iter.next()
+    }
+    res.send(JSON.stringify(ret))
+})
+
+router.get('/active/deep', async function(req, res){
+    const { rows } = await db.query(`select * from games where active=true;`)
+    res.send(JSON.stringify(rows))
 })
 
 router.get('/all', async (req, res) => {
