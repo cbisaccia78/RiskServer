@@ -58,7 +58,7 @@ const insertTurn = function(turn_stack, assignedSeat){
     //[4,1,2] insert 3
     //[4,5,6] insert 1
     //[4,5,6,1] insert 2'
-    debugger
+    //debugger
     var modulated = false //did we go backwards in order ie) 6->1
     while(i < l){ //l is at least 3
         curr = turnstack[i]
