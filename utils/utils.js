@@ -27,7 +27,7 @@ const openSeats = function(turnStack){
     if(turnStack === []){
         return openSeats
     }
-    for(var i = 0; i < 6, i++){
+    for(var i = 0; i < 6; i++){
         if(turnStack.includes(i+1)){
             openSeats.splice(i, 1)
         }
