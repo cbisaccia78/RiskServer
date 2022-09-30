@@ -23,4 +23,18 @@ const randomObjectValue= function(object){
     return vals[Math.floor(Math.random()*vals.length)]
 }
 
-module.exports = { RangeList, gameURLParse, randomObjectValue}
+const openSeats = function(turnStack){
+    const openSeats = RangeList(1,6)
+    if(turnStack === []){
+        return openSeats
+    }
+    for(var i = 0; i < 6, i++){
+        if(turnStack.includes(i+1)){
+            openSeats.splice(i, 1)
+        }
+    }
+    return openSeats
+
+}
+
+module.exports = { RangeList, gameURLParse, randomObjectValue, openSeats}

@@ -47,6 +47,9 @@ Game.prototype = {
             player: player
         })
     },
+    getPlayers : function(){
+        return this.getState().players.playerList
+    },
     handleAction : function(action){
         this._store.dispatch(action)
     },
@@ -57,6 +60,13 @@ Game.prototype = {
     },
     getState : function(){
         return this._store.getState()
+    },
+    getPlayerPosition: function(playerName){
+        const players = this.getPlayers().filter((player) => player.name == playerName)
+        if(players.length != 1){
+            throw new Error("No Player found")
+        }
+        return players[0].table_position
     }
 }
 

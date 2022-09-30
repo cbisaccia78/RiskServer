@@ -1,5 +1,4 @@
-const WebSocket = require("ws")
-const WebSocketServer = WebSocket.WebSocketServer
+const {WebSocketServer} = require("ws")
 const Game = require("./game")
 
 
@@ -25,7 +24,7 @@ GameServer.prototype = {
         this._wss.on('connection', function connection(ws){
             ws.on('message', function message(data){
                 msg = JSON.parse(data)
-                console.log(`recieved message`)
+                console.log(`recieved message: ${data}`)
                 switch(msg.type){
                     case 'GET_INITIAL_STATE':
                         /*
@@ -47,7 +46,7 @@ GameServer.prototype = {
                                 color: 'blue', //hardcoded for now
                                 secretMission: 'kill yellow', //hardcoded for now 
                                 icon: "binaryImageData",
-                                globalPosition: this.game.getPlayerPos('playername')//??????
+                                globalPosition: this.game.getPlayerPosition('testplayer')//??????
                             }
                         }), [ws])
                         break
@@ -80,7 +79,7 @@ GameServer.prototype = {
     },
     _cleanup : async function(){},
     _notifyAll : async function(payload, exclude=[]){
-        this._wss.forEach(function(ws){
+        this._wss.clients.forEach(function(ws){
             ws.send(payload)
         })
     },
