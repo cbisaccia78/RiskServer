@@ -1,3 +1,4 @@
+const _ = require('lodash')
 
 const RangeList = function(start, end){
     ret = []
@@ -47,15 +48,7 @@ const insertTurn = function(turn_stack, assignedSeat){
     }
 
     var last = turnstack[0]
-    
     var curr = turnstack[1]
-
-    //3->[2,4]
-    //1->[2,4]
-    //5->[2,4]
-    //3->[4,2]
-    //1->[4,2]
-    //5->[4,2]
     if(l == 2){
         if(last < curr){
             if(assignedSeat > last && assignedSeat < curr){ 
@@ -74,14 +67,7 @@ const insertTurn = function(turn_stack, assignedSeat){
     }
 
     var i = 1
-    last = turnstack[0]
 
-    //[2,3,1] insert 6
-    //[5,6,2,4] insert 3
-    //[4,1,2] insert 3
-    //[4,5,6] insert 1
-    //[4,5,6,1] insert 2'
-    //debugger
     var modulated = false //did we go backwards in order ie) 6->1
     while(i < l){ //l is at least 3
         curr = turnstack[i]

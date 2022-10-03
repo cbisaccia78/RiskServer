@@ -42,7 +42,7 @@ GameServer.prototype = {
                         this._notifyAll(JSON.stringify({
                             type: "PLAYER_CHANGE/ADD", 
                             player: {
-                                name: 'playername',
+                                name: 'testplayer',
                                 color: 'blue', //hardcoded for now
                                 secretMission: 'kill yellow', //hardcoded for now 
                                 icon: "binaryImageData",

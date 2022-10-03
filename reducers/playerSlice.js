@@ -1,22 +1,21 @@
-const { assign } = require('lodash')
 const _ = require('lodash')
 const utils = require('../utils/utils')
 
-const initialPlayerState = function(){
 
-    return {
-        playerList: [null,null,null,null,null,null],
-        turn_stack: []
-    }//6 players,
+const initialPlayerState = {
+    playerList: [null,null,null,null,null,null],
+    turn_stack: []
+}//6 players,
     
-}
 
-const playerChangeReducer = function(state=initialPlayerState(), action){
-    const playerList = _.cloneDeep(state.players.playerList)
-    const turn_stack = _.cloneDeep(state.players.turn_stack)
+
+const playerChangeReducer = function(state=initialPlayerState, action){
+    const playerList = _.cloneDeep(state.playerList)
+    const turn_stack = _.cloneDeep(state.turn_stack)
     switch(action.type){
         case 'PLAYER_CHANGE/ADD':
             const player = _.cloneDeep(action.player)
+            console.log('player' + player);
             const open = utils.openSeats(turn_stack)
             const assignedSeat = open[Math.floor(Math.random()*open.length)]
             player.table_position = assignedSeat
@@ -31,14 +30,5 @@ const playerChangeReducer = function(state=initialPlayerState(), action){
     }
 }
 
-const turnChangeReducer = function(state, action){
-    switch(action.type){
-        case 'TURN_CHANGE':
-            return {...state, turn: (turn+1)%6}
-        default:
-            return state
-    }
-    
-}
 
-module.exports = {playerChangeReducer, turnChangeReducer}
+module.exports = playerChangeReducer
