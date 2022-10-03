@@ -80,7 +80,10 @@ GameServer.prototype = {
     _cleanup : async function(){},
     _notifyAll : async function(payload, exclude=[]){
         this._wss.clients.forEach(function(ws){
-            ws.send(payload)
+            if(!exclude.includes(ws)){
+                console.log(ws);
+                ws.send(payload)
+            } 
         })
     },
     /*
