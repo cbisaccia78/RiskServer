@@ -17,7 +17,7 @@ GameServer.prototype = {
     */
     _state: "PENDING_START",
     _wss : null,
-    _userIds : [],
+    _userIds : new Set(),
     _init : function(game){
         this.game = game ? game : new Game(this.id)
         this._wss = new WebSocketServer({noServer: true})
@@ -90,13 +90,13 @@ GameServer.prototype = {
     */
     id: null,
     game : null,
-    addPlayer : function(user){
+    addPlayer : function(userid){
         //do some stuff to register user
-        this.game.addPlayer(user)
+        this._userIds.add(userid)
     },
-    removePlayer : function(user){
+    removePlayer : function(userid){
         //do something
-        this.player.removePlayer(user)
+        this._userIds.delete(userid)
     },
     end : function(){},
     getState : function(){
