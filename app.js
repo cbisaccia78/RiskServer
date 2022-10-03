@@ -76,11 +76,14 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
         //add player to game
         
     }else{
-        console.log('creating new game')
-        game_id = availableGameIDs.pop()
-        gameServer = new GameServer(game_id, {request: request, socket: socket, head: head})
-        gameServer.addPlayer(user_id)
-        idGameMap[game_id] = gameServer
+        if(user_id > 0){
+            console.log('creating new game')
+            game_id = availableGameIDs.pop()
+            gameServer = new GameServer(game_id, {request: request, socket: socket, head: head})
+            gameServer.addPlayer(user_id)
+            idGameMap[game_id] = gameServer
+        }
+        
     }
 })
 
