@@ -2,12 +2,12 @@ const express = require('express')
 const router = express.Router()
 
 const db = require('../db')
-const {userSet} = require('../app')
+const {userSet} = require('../sessioncache')
 
-router.post('/login', async (req, res) => {
-    const {username, password} = req.body.JSON()
+router.post('/', async (req, res) => {
+    const {username, password} = req.body
     //need to add input sanitization/validation here
-    const { rows } = await db.query(`select * from users where username=${username} and password=${password};`)
+    const { rows } = await db.query(`select * from users where username='${username}' and password='${password}';`)
     if(rows.length == 1){
         userSet.add(username)
         res.send(JSON.stringify({success: true, user_id: rows[0].id}))
