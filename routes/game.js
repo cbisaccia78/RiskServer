@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const idGameMap = require('../sessioncache').idGameMap
+const {idGameMap} = require('../sessioncache')
 
 
 const db = require('../db')
