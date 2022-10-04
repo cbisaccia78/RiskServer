@@ -2,6 +2,7 @@
 
 const gameURLParse = require("./utils/utils").gameURLParse
 const url = require('url')
+const bodyParser = require('body-parser')
 const parse = url.parse
 
 const express = require('express')
@@ -10,6 +11,8 @@ const http = require('http')
 const cors = require('cors')
 const fs = require('fs')
 const app = express()
+app.use(express.json())
+app.use(bodyParser.json({limit: `500kb`}))
 app.use(cors())
 const mountRoutes = require('./routes')
 const GameServer = require("./gameserver")
