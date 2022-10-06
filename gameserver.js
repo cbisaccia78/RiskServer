@@ -4,8 +4,7 @@ const {idGameMap} = require("./sessioncache")
 
 const GameServer = function(id, connectionObject, game=null){
     this.id = id
-    this.conn = connectionObject
-    this._init(game)
+    this._init(connectionObject, game)
 }
 
 GameServer.prototype = {
@@ -18,7 +17,7 @@ GameServer.prototype = {
     _state: "PENDING_START",
     _wss : null,
     _userIds : new Set(),
-    _init : function(game){
+    _init : function(conn, game){
         this.game = game ? game : new Game(this.id)
         this._wss = new WebSocketServer({noServer: true})
         this._wss.on('connection', function connection(ws){
@@ -29,26 +28,33 @@ GameServer.prototype = {
                     case 'GET_INITIAL_STATE':
                         /*
                             This should only be sent once
-                            by the client as they are first joining
+                            by the client as they are first connecting
                         */
                         console.log('init state')
-                        this.game.addPlayer({
-                            name: 'testplayer',
-                            color: 'blue', //hardcoded for now
-                            secretMission: 'kill yellow', //hardcoded for now 
-                            icon: "binaryImageData"
-                        })//hardcoded for now, should eventually be contained in msg.player
+                        
                         ws.send(JSON.stringify({type: "INITIALIZE_GAME", state: this.game.getState()}))
-                        this._notifyAll(JSON.stringify({
-                            type: "PLAYER_CHANGE/ADD", 
-                            player: {
+
+                        var userHasJoined = true; // need to determine the value of this boolean
+                        if(userHasJoined){
+                            this.game.addPlayer({
                                 name: 'testplayer',
                                 color: 'blue', //hardcoded for now
                                 secretMission: 'kill yellow', //hardcoded for now 
-                                icon: "binaryImageData",
-                                globalPosition: this.game.getPlayerPosition('testplayer')//??????
-                            }
-                        }), [ws])
+                                icon: "binaryImageData"
+                            })//hardcoded for now, should eventually be contained in msg.player
+                            
+                            this._notifyAll(JSON.stringify({
+                                type: "PLAYER_CHANGE/ADD", 
+                                player: {
+                                    name: 'testplayer',
+                                    color: 'blue', //hardcoded for now
+                                    secretMission: 'kill yellow', //hardcoded for now 
+                                    icon: "binaryImageData",
+                                    globalPosition: this.game.getPlayerPosition('testplayer')//??????
+                                }
+                            }), [ws])
+                        }
+                        
                         break
                     case 'ACTION':
                         console.log('action')
@@ -75,9 +81,8 @@ GameServer.prototype = {
             
         }.bind(this))
         
-        this._wss.handleUpgrade(this.conn.request, this.conn.socket, this.conn.head, function done(ws){
-            this._wss.emit('connection', ws, this.conn.request)
-        }.bind(this))
+        this.handleUpgrade(conn.request, conn.socket, conn.head)
+        
         
     },
     _cleanup : async function(){},
@@ -103,6 +108,11 @@ GameServer.prototype = {
     removePlayer : function(userid){
         //do something
         this._userIds.delete(userid)
+    },
+    handleUpgrade(request, socket, head){
+        this._wss.handleUpgrade(request, socket, head, function done(ws){
+            this._wss.emit('connection', ws, request)
+        }.bind(this))
     },
     end : function(){},
     getState : function(){

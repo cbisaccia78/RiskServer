@@ -7,10 +7,10 @@ const GameServer = require('../gameserver')
 const db = require('../db')
 
 router.get('/active', function(req, res){
-    console.log(`active games: `, idGameMap)
+    //console.log(`active games: `, idGameMap)
     const ret = []
     idGameMap.forEach((g, _id, m) => {
-        console.log('we in it', g)
+        //console.log('we in it', g)
         ret.push({game_id: _id, num_players: g.game.getNumPlayers()})
     })
     res.send(JSON.stringify(ret))

@@ -50,44 +50,53 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
 
     */
     console.log('detected upgrade')
-    const proto = request.headers["sec-websocket-protocol"]
+
+    const proto = request.headers["sec-websocket-protocol"] //connection cases (could also store initial JWT in this field?) 
+    console.log(proto);
+
     const {pathname} = parse(request.url)
     //console.log(pathname)
+
     gameValues = gameURLParse(pathname)
-    //console.log(gameValues)
+    console.log(gameValues)
+
     if(gameValues === null){//this needs more security
         console.log('could not parse url')
         socket.destroy()
         return
     }
-    console.log(proto);
     
     var {game_id, user_id} = gameValues
-    console.log(user_id);
-    if(game_id in idGameMap.keys()){
+    //console.log(user_id);
+    game_id = parseInt(game_id)
+    user_id = parseInt(user_id)
+    var userIsWhoTheySayTheyAre = true // need logic here
+
+    if(idGameMap.has(game_id)){
         console.log('game_id in cache')
-        gameServer = idGameMap.get(game_id)
-        if(gameServer.isFull()){ //to handle race conditions? (two people click on game at same time?)
-            socket.destroy()
-        }else{
-            if(userSet.has(user_id)){ //user has already logged in
+        const gameServer = idGameMap.get(game_id)
+        gameServer.handleUpgrade(request, socket, head)
+
+        if(proto && proto.includes("JOIN") && userIsWhoTheySayTheyAre){
+            if(!gameServer.isFull() ){ //to handle race conditions? (two people click on game at same time?)
                 gameServer.addPlayer(user_id) //NEED AUTHENTICATION!!!!!!!!
                 if(gameServer.isFull()){ 
                     gameServer.startGame()
                 }
-            }else{//not logged in.
-                console.log('user not logged in')
-                socket.destroy()
             }
         }
-        //add player to game
         
     }else{
+        if(!userIsWhoTheySayTheyAre){
+            socket.destroy()
+            return
+        }
+        //by this point user is authenticated, can create and join game
         console.log('creating new game')
-        game_id = availableGameIDs.pop()
-        gameServer = new GameServer(game_id, {request: request, socket: socket, head: head})
-        gameServer.addPlayer(user_id)
+        game_id = availableGameIDs.shift()
+        const gameServer = new GameServer(game_id, {request: request, socket: socket, head: head})
         idGameMap.set(game_id, gameServer)
+        gameServer.addPlayer(user_id)
     }
 })
 
