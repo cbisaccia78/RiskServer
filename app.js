@@ -50,6 +50,7 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
 
     */
     console.log('detected upgrade')
+    const proto = request.headers["sec-websocket-protocol"]
     const {pathname} = parse(request.url)
     //console.log(pathname)
     gameValues = gameURLParse(pathname)
@@ -59,10 +60,13 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
         socket.destroy()
         return
     }
+    console.log(proto);
+    
     var {game_id, user_id} = gameValues
+    console.log(user_id);
     if(game_id in idGameMap.keys()){
         console.log('game_id in cache')
-        gameServer = idGameMap[game_id]
+        gameServer = idGameMap.get(game_id)
         if(gameServer.isFull()){ //to handle race conditions? (two people click on game at same time?)
             socket.destroy()
         }else{
@@ -79,14 +83,11 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
         //add player to game
         
     }else{
-        if(user_id > 0){
-            console.log('creating new game')
-            game_id = availableGameIDs.pop()
-            gameServer = new GameServer(game_id, {request: request, socket: socket, head: head})
-            gameServer.addPlayer(user_id)
-            idGameMap[game_id] = gameServer
-        }
-        
+        console.log('creating new game')
+        game_id = availableGameIDs.pop()
+        gameServer = new GameServer(game_id, {request: request, socket: socket, head: head})
+        gameServer.addPlayer(user_id)
+        idGameMap.set(game_id, gameServer)
     }
 })
 

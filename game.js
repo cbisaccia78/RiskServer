@@ -50,6 +50,9 @@ Game.prototype = {
     getPlayers : function(){
         return this.getState().players.playerList
     },
+    getNumPlayers : function(){
+        return this.getPlayers().length
+    },
     handleAction : function(action){
         this._store.dispatch(action)
     },

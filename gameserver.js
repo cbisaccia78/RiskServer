@@ -1,6 +1,6 @@
 const {WebSocketServer} = require("ws")
 const Game = require("./game")
-
+const {idGameMap} = require("./sessioncache")
 
 const GameServer = function(id, connectionObject, game=null){
     this.id = id
@@ -50,14 +50,6 @@ GameServer.prototype = {
                             }
                         }), [ws])
                         break
-                    case 'PLAYER_CHANGE/REMOVE':
-                        this.game.removePlayer('playername')//?????????
-                        this._notifyAll(JSON.stringify({
-                            type: "PLAYER_CHANGE/REMOVE", 
-                            player: {
-                                name: 'playername'//is more information needed?
-                            }
-                        }), [ws])
                     case 'ACTION':
                         console.log('action')
                         this.game.handleAction(msg.action)
@@ -68,6 +60,17 @@ GameServer.prototype = {
                         console.log('default')
                         ws.send(" Not sure how to respond")
                 }
+            }.bind(this))
+
+            ws.on('close', function close(data){
+                this.game.removePlayer(JSON.parse(data).user_id)
+                this._notifyAll(JSON.stringify({
+                    type: "PLAYER_CHANGE/REMOVE", 
+                    player: {
+                        name: 'playername'//is more information needed?
+                    }
+                }), [ws])
+                console.log('closed');
             }.bind(this))
             
         }.bind(this))
