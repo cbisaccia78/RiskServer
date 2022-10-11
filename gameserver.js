@@ -69,12 +69,11 @@ GameServer.prototype = {
             }.bind(this))
 
             ws.on('close', function close(data){
-                this.game.removePlayer(JSON.parse(data).user_id)
+                let _player = JSON.parse(data)
+                this.game.removePlayer(_player)
                 this._notifyAll(JSON.stringify({
                     type: "PLAYER_CHANGE/REMOVE", 
-                    player: {
-                        name: 'playername'//is more information needed?
-                    }
+                    player: _player
                 }), [ws])
                 console.log('closed');
             }.bind(this))
