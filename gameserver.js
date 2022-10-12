@@ -40,7 +40,7 @@ GameServer.prototype = {
                                 name: 'testplayer',
                                 color: 'blue', //hardcoded for now
                                 secretMission: 'kill yellow', //hardcoded for now 
-                                icon: "binaryImageData"
+                                //icon: "binaryImageData"
                             })//hardcoded for now, should eventually be contained in msg.player
                             
                             this._notifyAll(JSON.stringify({
