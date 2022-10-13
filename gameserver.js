@@ -1,6 +1,5 @@
 const {WebSocketServer} = require("ws")
 const Game = require("./game")
-const {idGameMap} = require("./sessioncache")
 
 const GameServer = function(id, connectionObject, game=null){
     this.id = id
@@ -16,7 +15,7 @@ GameServer.prototype = {
     */
     _state: "PENDING_START",
     _wss : null,
-    _userIds : new Set(),
+    _userJWTs : new Set(),
     _init : function(conn, game){
         this.game = game ? game : new Game(this.id)
         this._wss = new WebSocketServer({noServer: true})
@@ -31,9 +30,6 @@ GameServer.prototype = {
                             by the client as they are first connecting
                         */
                         console.log('init state')
-                        
-                        ws.send(JSON.stringify({type: "INITIALIZE_GAME", state: this.game.getState()}))
-
                         var userHasJoined = true; // need to determine the value of this boolean
                         if(userHasJoined){
                             this.game.addPlayer({
@@ -52,9 +48,10 @@ GameServer.prototype = {
                                     icon: "binaryImageData",
                                     globalPosition: this.game.getPlayerPosition('testplayer')//??????
                                 }
-                            }), [ws])
+                            }))
+
                         }
-                        
+                        ws.send(JSON.stringify({type: "INITIALIZE_GAME", state: this.game.getState()}))                        
                         break
                     case 'ACTION':
                         console.log('action')
@@ -100,13 +97,13 @@ GameServer.prototype = {
     */
     id: null,
     game : null,
-    addPlayer : function(userid){
-        //do some stuff to register user
-        this._userIds.add(userid)
+    addPlayer : function(userid){//this should be renamed 
+        //do some stuff to assign user JWT
+        this._userJWTs.add(userid)
     },
     removePlayer : function(userid){
         //do something
-        this._userIds.delete(userid)
+        this._userJWTs.delete(userid)
     },
     handleUpgrade(request, socket, head){
         this._wss.handleUpgrade(request, socket, head, function done(ws){

@@ -16,7 +16,7 @@ app.use(bodyParser.json({limit: `500kb`}))
 app.use(cors())
 const mountRoutes = require('./routes')
 const GameServer = require("./gameserver")
-const {idGameMap, userSet, availableGameIDs} = require("./sessioncache")
+const {idGameMap, userIdJWTMap, availableGameIDs} = require("./sessioncache")
 const db = require("./db")
 
 mountRoutes(app)
@@ -51,8 +51,8 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
     */
     console.log('detected upgrade')
 
-    const proto = request.headers["sec-websocket-protocol"] //connection cases (could also store initial JWT in this field?) 
-    console.log(proto);
+    const protos = request.headers["sec-websocket-protocol"] //connection cases (could also store initial JWT in this field?) 
+    console.log(protos);
 
     const {pathname} = parse(request.url)
     //console.log(pathname)
@@ -70,14 +70,32 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
     //console.log(user_id);
     game_id = parseInt(game_id)
     user_id = parseInt(user_id)
+    if(game_id == 0 && user_id == 0){
+        console.log('anonymous without active game, no need for websocket');
+        socket.destroy()
+        return
+    }
+
     var userIsWhoTheySayTheyAre = true // need logic here
+    if(user_id > 0){
+        //this means that user should have accessed the login endpoint,
+        //in which case they were assigned a JWT upon success.
+        //therefore, check that the JWT exists in the sec-websocket-protocol header field
+        //and compare against the cached user_id -> JWT map
+        //if equal, continue, else not authenticated destroy socket
+        if(!userIdJWTMap.has(user_id) || protos[-1] != userIdJWTMap.get(user_id)){
+            socket.destroy()
+            return
+        }
+    }
+
 
     if(idGameMap.has(game_id)){
         console.log('game_id in cache')
         const gameServer = idGameMap.get(game_id)
         gameServer.handleUpgrade(request, socket, head)
 
-        if(proto && proto.includes("JOIN") && userIsWhoTheySayTheyAre){
+        if(protos && protos.includes("JOIN") && userIsWhoTheySayTheyAre){
             if(!gameServer.isFull() ){ //to handle race conditions? (two people click on game at same time?)
                 gameServer.addPlayer(user_id) //NEED AUTHENTICATION!!!!!!!!
                 if(gameServer.isFull()){ 
