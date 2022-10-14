@@ -14,7 +14,7 @@ const playerChangeReducer = function(state=initialPlayerState, action){
     const turn_stack = _.cloneDeep(state.turn_stack)
     switch(action.type){
         case 'PLAYER_CHANGE/ADD':
-            const player = _.cloneDeep(action.player.player)
+            const player = _.cloneDeep(action.player)
             //console.log('player' + JSON.stringify(player));
             var assignedSeat = player.table_position
             if(turn_stack.includes(assignedSeat)){

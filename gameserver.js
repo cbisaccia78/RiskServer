@@ -23,7 +23,7 @@ GameServer.prototype = {
         this._wss.on('connection', function connection(ws){
             ws.on('message', function message(data){
                 msg = JSON.parse(data)
-                const loggedInAndAuthorized = userIdJWTMap.has(msg.user_id) && userIdJWTMap.get(msg.user_id) ==  msg.JWT
+                const loggedInAndAuthorized = this._userIds.has(msg.user_id) && userIdJWTMap.get(msg.user_id) ==  msg.JWT
                 
                 console.log(`recieved message: ${data}`)
                 switch(msg.type){
@@ -33,32 +33,28 @@ GameServer.prototype = {
                             by the client as they are first connecting
                         */
                         console.log('init state')
-                        if(msg.joining && loggedInAndAuthorized){
-                            let player = {
-                                id: msg.user_id,
-                                name: msg.username,
-                                color: msg.color, //hardcoded for now
-                                icon: msg.icon,
-                                table_position: msg.table_position
-                            }
-                            this.game.addPlayer({
-                                player
-                            })//hardcoded for now, should eventually be contained in msg.player
-                            
-                            this._notifyAll(JSON.stringify({
-                                type: "PLAYER_CHANGE/ADD", 
-                                player: this.game.getPlayer(player.id)
-                            }))
-
-                        }
+                        
                         ws.send(JSON.stringify({type: "INITIALIZE_GAME", state: this.game.getState()}))                        
                         break
                     case 'JOIN': //if a logged in user is originally spectating but then wishes to join
                         if(!this.game.isFull() ){ //to handle race conditions? (two people click on game at same time?)
-                            this.game.addPlayer(msg.player) //NEED AUTHENTICATION!!!!!!!!
-                            if(this.game.isFull()){ 
-                                this.game.start()
+                             //NEED AUTHENTICATION!!!!!!!!
+                            let player = msg.player
+                            if(loggedInAndAuthorized){
+                                player.id = msg.user_id
+                                this.game.addPlayer(
+                                    player
+                                )//hardcoded for now, should eventually be contained in msg.player
+                                
+                                this._notifyAll(JSON.stringify({
+                                    type: "PLAYER_CHANGE/ADD", 
+                                    player: this.game.getPlayer(player.id)
+                                }))
+                                if(this.game.isFull()){ 
+                                    this.game.start()
+                                }
                             }
+                            
                         }
                         break
                     case 'ACTION':
