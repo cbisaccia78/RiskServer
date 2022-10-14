@@ -47,11 +47,19 @@ GameServer.prototype = {
                             
                             this._notifyAll(JSON.stringify({
                                 type: "PLAYER_CHANGE/ADD", 
-                                player: this.game.getPlayer(msg.user_id)
+                                player: this.game.getPlayer(player.id)
                             }))
 
                         }
                         ws.send(JSON.stringify({type: "INITIALIZE_GAME", state: this.game.getState()}))                        
+                        break
+                    case 'JOIN': //if a logged in user is originally spectating but then wishes to join
+                        if(!this.game.isFull() ){ //to handle race conditions? (two people click on game at same time?)
+                            this.game.addPlayer(msg.player) //NEED AUTHENTICATION!!!!!!!!
+                            if(this.game.isFull()){ 
+                                this.game.start()
+                            }
+                        }
                         break
                     case 'ACTION':
                         console.log('action')
@@ -74,7 +82,7 @@ GameServer.prototype = {
                 this._notifyAll(JSON.stringify({
                     type: "PLAYER_CHANGE/REMOVE", 
                     player: _player
-                }), [ws])
+                }))
                 console.log('closed');
             }.bind(this))
             
@@ -100,11 +108,11 @@ GameServer.prototype = {
     */
     id: null,
     game : null,
-    addPlayer : function(userid){//this should be renamed 
+    addUser : function(userid){//this should be renamed 
         //do some stuff to assign user JWT
         this._userIds.add(userid)
     },
-    removePlayer : function(userid){
+    removeUser : function(userid){
         //do something
         this._userIds.delete(userid)
     },

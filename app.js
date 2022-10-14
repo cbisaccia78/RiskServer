@@ -51,7 +51,7 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
     */
     console.log('detected upgrade')
 
-    const protos = request.headers["sec-websocket-protocol"].split(",") //connection cases (could also store initial JWT in this field?) 
+    const protos = (request.headers["sec-websocket-protocol"] || "").split(",")//connection cases (could also store initial JWT in this field?) 
     console.log(protos);
 
     const {pathname} = parse(request.url)
@@ -96,16 +96,7 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
         console.log('game_id in cache')
         const gameServer = idGameMap.get(game_id)
         gameServer.handleUpgrade(request, socket, head)
-
-        if(protos && protos.includes("JOIN") && userIsWhoTheySayTheyAre && user_id){
-            if(!gameServer.isFull() ){ //to handle race conditions? (two people click on game at same time?)
-                gameServer.addPlayer(user_id) //NEED AUTHENTICATION!!!!!!!!
-                if(gameServer.isFull()){ 
-                    gameServer.startGame()
-                }
-            }
-        }
-        
+        if(user_id) gameServer.addUser(user_id)
     }else{
         if(user_id == 0){
             socket.destroy()
@@ -120,7 +111,7 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
         game_id = availableGameIDs.shift()
         const gameServer = new GameServer(game_id, {request: request, socket: socket, head: head})
         idGameMap.set(game_id, gameServer)
-        gameServer.addPlayer(user_id)
+        gameServer.addUser(user_id)
     }
 })
 

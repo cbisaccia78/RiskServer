@@ -47,6 +47,9 @@ Game.prototype = {
             player: player
         })
     },
+    isFull : function(){
+        return this.getNumPlayers() == 6
+    },
     getPlayers : function(){
         return this.getState().players.playerList
     },
@@ -65,6 +68,7 @@ Game.prototype = {
         return this._store.getState()
     },
     getPlayer : function(id){
+        console.log(JSON.stringify(this.getPlayers()));
         const players = this.getPlayers().filter((player)=>player && player.id==id)
         if(players.length == 1){
             return players[0]
