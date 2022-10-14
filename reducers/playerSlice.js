@@ -16,9 +16,12 @@ const playerChangeReducer = function(state=initialPlayerState, action){
         case 'PLAYER_CHANGE/ADD':
             const player = _.cloneDeep(action.player)
             console.log('player' + player);
-            const open = utils.openSeats(turn_stack)
-            const assignedSeat = open[Math.floor(Math.random()*open.length)]
-            player.table_position = assignedSeat
+            var assignedSeat = player.table_position
+            if(turn_stack.includes(player.table_position)){
+                const open = utils.openSeats(turn_stack)
+                assignedSeat = open[Math.floor(Math.random()*open.length)]
+                player.table_position = assignedSeat
+            }
             playerList.splice(assignedSeat, 0, player)
             return {playerList: playerList, turn_stack: utils.insertTurn(turn_stack, assignedSeat)}
         case 'PLAYER_CHANGE/REMOVE':

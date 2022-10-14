@@ -51,7 +51,7 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
     */
     console.log('detected upgrade')
 
-    const protos = request.headers["sec-websocket-protocol"] //connection cases (could also store initial JWT in this field?) 
+    const protos = request.headers["sec-websocket-protocol"].split(",") //connection cases (could also store initial JWT in this field?) 
     console.log(protos);
 
     const {pathname} = parse(request.url)
@@ -76,14 +76,16 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
         return
     }
 
-    var userIsWhoTheySayTheyAre = true // need logic here
     if(user_id > 0){
         //this means that user should have accessed the login endpoint,
         //in which case they were assigned a JWT upon success.
         //therefore, check that the JWT exists in the sec-websocket-protocol header field
         //and compare against the cached user_id -> JWT map
         //if equal, continue, else not authenticated destroy socket
-        if(!userIdJWTMap.has(user_id) || protos[-1] != userIdJWTMap.get(user_id)){
+        console.log(protos);
+        console.log(userIdJWTMap.get(user_id));
+        if(!userIdJWTMap.has(user_id) || !protos || protos.at(-1).trim() != userIdJWTMap.get(user_id)){
+            console.log('not authenticated');
             socket.destroy()
             return
         }
@@ -95,7 +97,7 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
         const gameServer = idGameMap.get(game_id)
         gameServer.handleUpgrade(request, socket, head)
 
-        if(protos && protos.includes("JOIN") && userIsWhoTheySayTheyAre){
+        if(protos && protos.includes("JOIN") && userIsWhoTheySayTheyAre && user_id){
             if(!gameServer.isFull() ){ //to handle race conditions? (two people click on game at same time?)
                 gameServer.addPlayer(user_id) //NEED AUTHENTICATION!!!!!!!!
                 if(gameServer.isFull()){ 
@@ -105,11 +107,15 @@ server.on('upgrade', function upgrade(request, socket, head){ //client wants a w
         }
         
     }else{
-        if(!userIsWhoTheySayTheyAre){
+        if(user_id == 0){
             socket.destroy()
             return
         }
         //by this point user is authenticated, can create and join game
+        if(!availableGameIDs.length){
+            socket.push("Server currently at capacity")
+            socket.destroy()
+        }
         console.log('creating new game')
         game_id = availableGameIDs.shift()
         const gameServer = new GameServer(game_id, {request: request, socket: socket, head: head})

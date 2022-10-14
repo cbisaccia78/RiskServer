@@ -1,4 +1,5 @@
 const _ = require('lodash')
+const {v4: uuidv4} = require('uuid')
 
 const RangeList = function(start, end){
     ret = []
@@ -98,4 +99,8 @@ const deleteTurn = function(turn_stack, assignedSeat){
     return turn_stack.filter((position) => assignedSeat != position)
 }
 
-module.exports = { RangeList, gameURLParse, randomObjectValue, openSeats, insertTurn, deleteTurn}
+const FWT = function(){
+    return uuidv4()
+}
+
+module.exports = { RangeList, gameURLParse, randomObjectValue, openSeats, insertTurn, deleteTurn, FWT}

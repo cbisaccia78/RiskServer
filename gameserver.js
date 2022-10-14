@@ -1,4 +1,5 @@
 const {WebSocketServer} = require("ws")
+const {userIdJWTMap} = require("./sessioncache")
 const Game = require("./game")
 
 const GameServer = function(id, connectionObject, game=null){
@@ -15,13 +16,15 @@ GameServer.prototype = {
     */
     _state: "PENDING_START",
     _wss : null,
-    _userJWTs : new Set(),
+    _userIds : new Set(),
     _init : function(conn, game){
         this.game = game ? game : new Game(this.id)
         this._wss = new WebSocketServer({noServer: true})
         this._wss.on('connection', function connection(ws){
             ws.on('message', function message(data){
                 msg = JSON.parse(data)
+                const loggedInAndAuthorized = userIdJWTMap.has(msg.user_id) && userIdJWTMap.get(msg.user_id) ==  msg.JWT
+                
                 console.log(`recieved message: ${data}`)
                 switch(msg.type){
                     case 'GET_INITIAL_STATE':
@@ -30,24 +33,21 @@ GameServer.prototype = {
                             by the client as they are first connecting
                         */
                         console.log('init state')
-                        var userHasJoined = true; // need to determine the value of this boolean
-                        if(userHasJoined){
+                        if(msg.joining && loggedInAndAuthorized){
+                            let player = {
+                                id: msg.user_id,
+                                name: msg.username,
+                                color: msg.color, //hardcoded for now
+                                icon: msg.icon,
+                                table_position: msg.table_position
+                            }
                             this.game.addPlayer({
-                                name: 'testplayer',
-                                color: 'blue', //hardcoded for now
-                                secretMission: 'kill yellow', //hardcoded for now 
-                                //icon: "binaryImageData"
+                                player
                             })//hardcoded for now, should eventually be contained in msg.player
                             
                             this._notifyAll(JSON.stringify({
                                 type: "PLAYER_CHANGE/ADD", 
-                                player: {
-                                    name: 'testplayer',
-                                    color: 'blue', //hardcoded for now
-                                    secretMission: 'kill yellow', //hardcoded for now 
-                                    icon: "binaryImageData",
-                                    globalPosition: this.game.getPlayerPosition('testplayer')//??????
-                                }
+                                player: this.game.getPlayer(msg.user_id)
                             }))
 
                         }
@@ -55,10 +55,13 @@ GameServer.prototype = {
                         break
                     case 'ACTION':
                         console.log('action')
-                        this.game.handleAction(msg.action)
-                        this._notifyAll(data, [ws]) //make sure clients update their state
-                        ws.send(" I got your action")
-                        break
+                        if(this._userIds.has(msg.user_id) && loggedInAndAuthorized){
+                            this.game.handleAction(msg.action)
+                            this._notifyAll(data, [ws]) //make sure clients update their state
+                            ws.send(" I got your action")
+                            break
+                        }
+                        
                     default:
                         console.log('default')
                         ws.send(" Not sure how to respond")
@@ -85,7 +88,7 @@ GameServer.prototype = {
     _notifyAll : async function(payload, exclude=[]){
         this._wss.clients.forEach(function(ws){
             if(!exclude.includes(ws)){
-                console.log(ws);
+                //console.log(ws);
                 ws.send(payload)
             } 
         })
@@ -99,11 +102,11 @@ GameServer.prototype = {
     game : null,
     addPlayer : function(userid){//this should be renamed 
         //do some stuff to assign user JWT
-        this._userJWTs.add(userid)
+        this._userIds.add(userid)
     },
     removePlayer : function(userid){
         //do something
-        this._userJWTs.delete(userid)
+        this._userIds.delete(userid)
     },
     handleUpgrade(request, socket, head){
         this._wss.handleUpgrade(request, socket, head, function done(ws){
