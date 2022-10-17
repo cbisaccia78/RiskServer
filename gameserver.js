@@ -14,9 +14,11 @@ GameServer.prototype = {
         *  PRIVATE  *
         ************
     */
+    _pendingResponses : [false, false, false, false, false, false],
     _state: "PENDING_START",
     _wss : null,
     _userIds : new Set(),
+    _uidWsMap : new Map(),
     _init : function(conn, game){
         this.game = game ? game : new Game(this.id)
         this._wss = new WebSocketServer({noServer: true})
@@ -124,11 +126,23 @@ GameServer.prototype = {
     isFull : function(){
         return false
     },
-    messageAll : function(data){},
-    message : function(user_id, data){},
+    messageAll : function(payload){
+        this._notifyAll(payload)
+    },
+    message : function(user_id, payload){
+        this._uidWsMap.get(user_id).send(JSON.stringify(payload))
+    },
     startGame : function(){
         this._state = "Running"
-        this.game.start()
+        this.game.initialize()
+        var next;
+        while(!this.game.state == "GAME_OVER"){
+            next = this.game.next()
+            this.message(next.user_id, {type: "PLAYER/PROMPT_ACTION"})
+            while(this._pendingResponses[next.table_position]){
+                
+            }
+        }
     },
 }
 

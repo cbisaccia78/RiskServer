@@ -1,11 +1,13 @@
 const { configureStore, combineReducers} = require("@reduxjs/toolkit")
 const deckReducer = require("./reducers/deckSlice")
 const playerChangeReducer = require("./reducers/playerSlice")
+const statusReducer = require("./reducers/statusSlice")
 
 
 const reducer = combineReducers({
     players: playerChangeReducer,
-    deck: deckReducer
+    deck: deckReducer,
+    status: statusReducer,
 })
 
 
@@ -35,6 +37,7 @@ Game.prototype = {
         *  PUBLIC  *
         ************
     */
+    state : "PENDING_START",
     addPlayer : function(player){
         this._store.dispatch({
             type: "PLAYER_CHANGE/ADD",
@@ -50,6 +53,9 @@ Game.prototype = {
     isFull : function(){
         return this.getNumPlayers() == 6
     },
+    getTurnStack : function(){
+        return this.getState().players.turn_stack
+    },
     getPlayers : function(){
         return this.getState().players.playerList
     },
@@ -59,16 +65,27 @@ Game.prototype = {
     handleAction : function(action){
         this._store.dispatch(action)
     },
-    start : function(){
-        this._store.dispatch({
-            type: "INITIALIZE_GAME"
+    initialize : function(){
+        console.log("started");
+        let p = this.getPlayers;
+
+        p.forEach(function(player){
+            this._store.dispatch({//
+                type: "PLAYER_CHANGE/INITIALIZE",
+                player: player,
+                table_size: p.length
+            })
         })
+        this.dispatch({type: "STATUS/SET", status: "INITIALIZED"})
     },
     getState : function(){
         return this._store.getState()
     },
+    getStatus : function(){
+        return this._store.getState().status
+    }
     getPlayer : function(id){
-        console.log(JSON.stringify(this.getPlayers()));
+        //console.log(JSON.stringify(this.getPlayers()));
         const players = this.getPlayers().filter((player)=>player && player.id==id)
         if(players.length == 1){
             return players[0]
@@ -77,12 +94,22 @@ Game.prototype = {
     },
     getPlayerPosition: function(id){
         const players = this.getPlayers().filter((player)=>player != null)
-        console.log(players);
+        //console.log(players);
         const player = players.filter((player) => player.name == playerName)
         if(player.length != 1){
             throw new Error("No Player found")
         }
         return this.getPlayer(id)?.table_position
+    },
+    peekFront : function(){
+        let ts = this.getTurnStack()
+        return ts.length ? ts[0] : null
+    },
+    next : function(){
+        let ts = _.cloneDeep(this.getTurnStack())
+        let _next = ts.shift()
+        ts.push(_next)
+        this.dispatch({type: "TURN_CHANGE", turn_stack:ts})
     }
 }
 
