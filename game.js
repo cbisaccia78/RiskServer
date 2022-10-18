@@ -37,6 +37,7 @@ Game.prototype = {
         *  PUBLIC  *
         ************
     */
+    id: null,
     addPlayer : function(player){
         this._store.dispatch({
             type: "PLAYER_CHANGE/ADD",
@@ -76,6 +77,9 @@ Game.prototype = {
             })
         })
         this.dispatch({type: "STATUS/SET", status: "INITIALIZED"})
+    },
+    getId : function(){
+        return this.id
     },
     getState : function(){
         return this._store.getState()

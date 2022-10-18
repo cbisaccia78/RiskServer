@@ -51,6 +51,10 @@ GameServer.prototype = {
                                     type: "PLAYER_CHANGE/ADD", 
                                     player: this.game.getPlayer(player.id)
                                 }))
+                                ws.send(JSON.stringify({
+                                    type: "INFO/GAMEID",
+                                    gameId: this.game.getId()
+                                }))
                                 if(this.game.isFull()){ 
                                     this.game.start()
                                 }
