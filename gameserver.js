@@ -14,7 +14,6 @@ GameServer.prototype = {
         *  PRIVATE  *
         ************
     */
-    _pendingResponses : [false, false, false, false, false, false],
     _state: "PENDING_START",
     _wss : null,
     _userIds : new Set(),
@@ -61,10 +60,9 @@ GameServer.prototype = {
                         break
                     case 'ACTION':
                         console.log('action')
-                        if(this._userIds.has(msg.user_id) && loggedInAndAuthorized){
+                        if(this._userIds.has(msg.user_id) && loggedInAndAuthorized && this.game.peekFront().user_id == msg.user_id){
                             this.game.handleAction(msg.action)
-                            this._notifyAll(data, [ws]) //make sure clients update their state
-                            ws.send(" I got your action")
+                            this._notifyAll(data) //make sure clients update their state
                             break
                         }
                         
@@ -129,20 +127,13 @@ GameServer.prototype = {
     messageAll : function(payload){
         this._notifyAll(payload)
     },
-    message : function(user_id, payload){
+    message : function(user_id, payload={}){
         this._uidWsMap.get(user_id).send(JSON.stringify(payload))
     },
     startGame : function(){
         this._state = "Running"
         this.game.initialize()
-        var next;
-        while(!this.game.state == "GAME_OVER"){
-            next = this.game.next()
-            this.message(next.user_id, {type: "PLAYER/PROMPT_ACTION"})
-            while(this._pendingResponses[next.table_position]){
-                
-            }
-        }
+        this.message(this.game.peekFront().user_id, {type: "PLAYER/PROMPT_ACTION"})
     },
 }
 

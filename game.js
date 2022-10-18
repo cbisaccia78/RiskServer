@@ -37,7 +37,6 @@ Game.prototype = {
         *  PUBLIC  *
         ************
     */
-    state : "PENDING_START",
     addPlayer : function(player){
         this._store.dispatch({
             type: "PLAYER_CHANGE/ADD",
@@ -83,7 +82,7 @@ Game.prototype = {
     },
     getStatus : function(){
         return this._store.getState().status
-    }
+    },
     getPlayer : function(id){
         //console.log(JSON.stringify(this.getPlayers()));
         const players = this.getPlayers().filter((player)=>player && player.id==id)
