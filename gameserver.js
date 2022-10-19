@@ -87,6 +87,7 @@ GameServer.prototype = {
                     const gid = this.game.id
                     idGameMap.delete(gid) 
                     availableGameIDs.push(gid)
+                    this.game = null
                     this._wss.close()
                 }
                 console.log('closed');
