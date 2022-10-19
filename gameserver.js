@@ -1,5 +1,5 @@
 const {WebSocketServer} = require("ws")
-const {userIdJWTMap} = require("./sessioncache")
+const {userIdJWTMap, idGameMap, availableGameIDs} = require("./sessioncache")
 const Game = require("./game")
 
 const GameServer = function(id, connectionObject, game=null){
@@ -83,6 +83,12 @@ GameServer.prototype = {
                     type: "PLAYER_CHANGE/REMOVE", 
                     player: _player
                 }))
+                if(this.game.isEmpty()){
+                    const gid = this.game.id
+                    idGameMap.delete(gid) 
+                    availableGameIDs.push(gid)
+                    this._wss.close()
+                }
                 console.log('closed');
             }.bind(this))
             

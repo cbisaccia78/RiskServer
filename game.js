@@ -50,6 +50,9 @@ Game.prototype = {
             player: player
         })
     },
+    isEmpty : function(){
+        return this.getNumPlayers() == 0
+    },
     isFull : function(){
         return this.getNumPlayers() == 6
     },
@@ -67,7 +70,7 @@ Game.prototype = {
     },
     initialize : function(){
         console.log("started");
-        let p = this.getPlayers;
+        let p = this.getPlayers();
 
         p.forEach(function(player){
             this._store.dispatch({//
@@ -76,7 +79,7 @@ Game.prototype = {
                 table_size: p.length
             })
         })
-        this.dispatch({type: "STATUS/SET", status: "INITIALIZED"})
+        this._store.dispatch({type: "STATUS/SET", status: "INITIALIZED"})
     },
     getId : function(){
         return this.id
