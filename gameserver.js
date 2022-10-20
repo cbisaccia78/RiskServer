@@ -56,7 +56,7 @@ GameServer.prototype = {
                                     gameId: this.game.getId()
                                 }))
                                 if(this.game.isFull()){ 
-                                    this.game.start()
+                                    this.startGame()
                                 }
                             }
                             
@@ -144,7 +144,7 @@ GameServer.prototype = {
     startGame : function(){
         this._state = "Running"
         this.game.initialize()
-        this.message(this.game.peekFront().user_id, {type: "PLAYER/PROMPT_ACTION"})
+        this.messageAll(JSON.stringify({type: "STATUS/SET", status: "INITIALIZED"}))
     },
 }
 
