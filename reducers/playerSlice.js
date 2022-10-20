@@ -4,7 +4,8 @@ const utils = require('../utils/utils')
 
 const initialPlayerState = {
     playerList: [null,null,null,null,null,null],
-    turn_stack: []
+    turn_stack: [], 
+    available_colors: ["blue", "red", "orange", "yellow", "green", "black"]
 }//6 players,
     
 
@@ -12,6 +13,7 @@ const initialPlayerState = {
 const playerChangeReducer = function(state=initialPlayerState, action){
     const playerList = _.cloneDeep(state.playerList)
     const turn_stack = _.cloneDeep(state.turn_stack)
+    const available_colors = _.cloneDeep(state.available_colors)
     let player;
     switch(action.type){
         case 'PLAYER_CHANGE/ADD':
@@ -24,11 +26,13 @@ const playerChangeReducer = function(state=initialPlayerState, action){
                 player.table_position = assignedSeat
             }
             playerList[assignedSeat-1] = player
-            return {playerList: playerList, turn_stack: utils.insertTurn(turn_stack, assignedSeat)}
+            available_colors.splice(available_colors.indexOf(player.color), 1)
+            return {playerList: playerList, turn_stack: utils.insertTurn(turn_stack, assignedSeat), available_colors: available_colors}
         case 'PLAYER_CHANGE/REMOVE':
             const pos = action.player.table_position
-            playerList.splice(pos-1, 1, null)
-            return {playerList: playerList, turn_stack: utils.deleteTurn(turn_stack, pos)}
+            playerList[pos-1] = null
+            available_colors.push(action.player.color)
+            return {playerList: playerList, turn_stack: utils.deleteTurn(turn_stack, pos), available_colors: available_colors}
         case 'PLAYER_CHANGE/INITIALIZE':
             const numInfantry = 40 - (action.table_size - 2)*5
             player = {...action.player, army: {INFANTRY: numInfantry, CAVALRY: 0, ARTILLERY: 0}}
