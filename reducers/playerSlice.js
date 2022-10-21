@@ -40,6 +40,8 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             return {...state, playerList: playerList}
         case 'TURN_CHANGE':
             return {...state, turn_stack: action.turn_stack}
+        case 'NOOP':
+            return state
         default:
             return state
     }

@@ -70,15 +70,15 @@ GameServer.prototype = {
                         break
                     case 'ACTION':
                         console.log('action')
-                        if(this._userIds.has(msg.user_id) && loggedInAndAuthorized && this.game.peekFront().user_id == msg.user_id){
+                        if(this._userIds.has(msg.user_id) && loggedInAndAuthorized && this.game.peekFront().id == msg.user_id){
                             this.game.handleAction(msg.action)
-                            this._notifyAll(data) //make sure clients update their state
-                            break
+                            this._notifyAll(JSON.stringify(msg.action)) //make sure clients update their state
                         }
+                        break
                         
                     default:
                         console.log('default')
-                        ws.send(" Not sure how to respond")
+                        ws.send("Not sure how to respond")
                 }
             }.bind(this))
 

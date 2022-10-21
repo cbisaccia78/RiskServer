@@ -7,7 +7,7 @@ const statusReducer = require("./reducers/statusSlice")
 const reducer = combineReducers({
     players: playerChangeReducer,
     deck: deckReducer,
-    status: statusReducer,
+    status: statusReducer
 })
 
 
@@ -67,6 +67,7 @@ Game.prototype = {
     },
     handleAction : function(action){
         this._store.dispatch(action)
+        this.next()
     },
     initialize : function(){
         console.log("started");
@@ -109,7 +110,7 @@ Game.prototype = {
     },
     peekFront : function(){
         let ts = this.getTurnStack()
-        return ts.length ? ts[0] : null
+        return ts.length ? this.getPlayers().filter((player)=>player && player.table_position==ts[0])[0] : null
     },
     next : function(){
         let ts = _.cloneDeep(this.getTurnStack())
