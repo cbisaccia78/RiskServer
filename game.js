@@ -78,7 +78,7 @@ Game.prototype = {
                 player: player,
                 table_size: p.length
             })
-        })
+        }.bind(this))
         this._store.dispatch({type: "STATUS/SET", status: "INITIALIZED"})
     },
     getId : function(){

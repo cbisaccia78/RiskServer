@@ -62,6 +62,12 @@ GameServer.prototype = {
                             
                         }
                         break
+                    case 'START':
+                        if(this._userIds.has(msg.user_id) && loggedInAndAuthorized){
+                            console.log('starting');
+                            this.startGame()
+                        }
+                        break
                     case 'ACTION':
                         console.log('action')
                         if(this._userIds.has(msg.user_id) && loggedInAndAuthorized && this.game.peekFront().user_id == msg.user_id){
