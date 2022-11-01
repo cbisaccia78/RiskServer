@@ -38,10 +38,33 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             player = {...action.player, army: {INFANTRY: numInfantry, CAVALRY: 0, ARTILLERY: 0}}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList}
+        case 'PLAYER_CHANGE/FORTIFY':
+            return {...state}
+        case 'PLAYER_CHANGE/REDEEM':
+            return {...state}
+        case 'PLAYER_CHANGE/ATTACK':
+            return {...state}
+        case 'PLAYER_CHANGE/PLACE_ARMIES':
+            player = {...action.player, army: {INFANTRY: action.player.INFANTRY - action.infrantry, CAVALRY: action.player.CAVALRY - action.cavalry, ARTILLERY: action.player.ARTILLERY - action.artillery}}
+            playerList[player.table_position-1] = player
+            return {...state, playerList: playerList}
+        case 'PLAYER_CHANGE/ELIMINATED':
+            return {...state}
+        case 'PLAYER_CHANGE/ELIMINATOR':
+            return {...state}
+        case 'PLAYER_CHANGE/ADD_CARD':
+            return {...state}
+        case 'PLAYER_CHANGE/SELECT_TERRITORY':
+            player = {...action.player, army: {INFANTRY: action.player.INFANTRY - 1, CAVALRY: action.player.CAVALRY, ARTILLERY: action.player.ARTILLERY}, territories: action.player.territories.concat(action.territory)}
+            playerList[player.table_position-1] = player
+            return {...state, playerList: playerList}
+        case 'PLAYER_CHANGE/CONQUER_TERRITORY':
+            player = {...action.player, army: {INFANTRY: action.player.INFANTRY - 1, CAVALRY: action.player.CAVALRY, ARTILLERY: action.player.ARTILLERY}, territories: action.player.territories.concat(action.territory)}
+            playerList[player.table_position-1] = player
+            return {...state, playerList: playerList}
         case 'TURN_CHANGE':
             return {...state, turn_stack: action.turn_stack}
         case 'NOOP':
-            return state
         default:
             return state
     }

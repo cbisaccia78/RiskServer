@@ -37,6 +37,13 @@ GameServer.prototype = {
                         
                         ws.send(JSON.stringify({type: "INITIALIZE_GAME", state: this.game.getState()}))                        
                         break
+                    case 'SOCKET_CLOSE':
+                        let _player = JSON.parse(data)
+                        this.game.removePlayer(_player)
+                        this._notifyAll(JSON.stringify({
+                            type: "PLAYER_CHANGE/REMOVE", 
+                            player: _player
+                        }))
                     case 'JOIN': //if a logged in user is originally spectating but then wishes to join
                         if(!this.game.isFull() ){ //to handle race conditions? (two people click on game at same time?)
                              //NEED AUTHENTICATION!!!!!!!!
@@ -72,7 +79,7 @@ GameServer.prototype = {
                         console.log('action')
                         if(this._userIds.has(msg.user_id) && loggedInAndAuthorized && this.game.peekFront().id == msg.user_id){
                             this.game.handleAction(msg.action)
-                            this._notifyAll(JSON.stringify(msg.action)) //make sure clients update their state
+                            this._notifyAll(JSON.stringify(msg)) //make sure clients update their state
                         }
                         break
                         
@@ -82,13 +89,7 @@ GameServer.prototype = {
                 }
             }.bind(this))
 
-            ws.on('close', function close(data){
-                let _player = JSON.parse(data)
-                this.game.removePlayer(_player)
-                this._notifyAll(JSON.stringify({
-                    type: "PLAYER_CHANGE/REMOVE", 
-                    player: _player
-                }))
+            ws.on('close', function close(){
                 if(this.game.isEmpty()){
                     const gid = this.game.id
                     idGameMap.delete(gid) 
@@ -151,6 +152,7 @@ GameServer.prototype = {
         this._state = "Running"
         this.game.initialize()
         this.messageAll(JSON.stringify({type: "STATUS/SET", status: "INITIALIZED"}))
+        this.messageAll(JSON.stringify({type: "PLAYER_CHANGE/INITIALIZE_ALL"}))
     },
 }
 

@@ -2,6 +2,7 @@ const { configureStore, combineReducers} = require("@reduxjs/toolkit")
 const deckReducer = require("./reducers/deckSlice")
 const playerChangeReducer = require("./reducers/playerSlice")
 const statusReducer = require("./reducers/statusSlice")
+const _ = require("lodash")
 
 
 const reducer = combineReducers({
@@ -116,7 +117,7 @@ Game.prototype = {
         let ts = _.cloneDeep(this.getTurnStack())
         let _next = ts.shift()
         ts.push(_next)
-        this.dispatch({type: "TURN_CHANGE", turn_stack:ts})
+        this._store.dispatch({type: "TURN_CHANGE", turn_stack:ts})
     }
 }
 
