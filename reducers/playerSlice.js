@@ -62,9 +62,11 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             player = {...action.player, army: {INFANTRY: action.player.INFANTRY - 1, CAVALRY: action.player.CAVALRY, ARTILLERY: action.player.ARTILLERY}, territories: action.player.territories.concat(action.territory)}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList}
-        case 'TURN_CHANGE':
-            return {...state, turn_stack: action.turn_stack}
         case 'NOOP':
+        case 'TURN_CHANGE':
+            let _next = turn_stack.shift()
+            turn_stack.push(_next)
+            return {...state, turn_stack: action.turn_stack}
         default:
             return state
     }

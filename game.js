@@ -68,7 +68,6 @@ Game.prototype = {
     },
     handleAction : function(action){
         this._store.dispatch(action)
-        this.next()
     },
     initialize : function(){
         console.log("started");
@@ -113,12 +112,6 @@ Game.prototype = {
         let ts = this.getTurnStack()
         return ts.length ? this.getPlayers().filter((player)=>player && player.table_position==ts[0])[0] : null
     },
-    next : function(){
-        let ts = _.cloneDeep(this.getTurnStack())
-        let _next = ts.shift()
-        ts.push(_next)
-        this._store.dispatch({type: "TURN_CHANGE", turn_stack:ts})
-    }
 }
 
 module.exports = Game
