@@ -29,7 +29,11 @@ Game.prototype = {
             reducer
         })
         this._unsubscribe = this._store.subscribe(()=>{
-            console.log('State after dispatch: ', this._store.getState())
+            let _state = this._store.getState()
+            console.log('State after dispatch: ', _state)
+            if(_state.status == "INITIAL_ARMY_PLACEMENT" && _state.players.available_territories.length == 0){
+                //we done baby!!!!!
+            }
         })
     },
     _unsubscribe : null,
@@ -67,7 +71,7 @@ Game.prototype = {
         return this.getPlayers().filter(player=>player != null).length
     },
     handleAction : function(action){
-        this._store.dispatch(action)
+        this._store.dispatch({...action, gameStatus: this.getStatus()})
     },
     initialize : function(){
         console.log("started");
@@ -80,7 +84,7 @@ Game.prototype = {
                 table_size: p.length
             })
         }.bind(this))
-        this._store.dispatch({type: "STATUS/SET", status: "INITIALIZED"})
+        this._store.dispatch({type: "STATUS/SET", status: "INITIAL_ARMY_PLACEMENT"})
     },
     getId : function(){
         return this.id

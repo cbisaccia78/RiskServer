@@ -5,7 +5,8 @@ const utils = require('../utils/utils')
 const initialPlayerState = {
     playerList: [null,null,null,null,null,null],
     turn_stack: [], 
-    available_colors: ["blue", "red", "orange", "yellow", "green", "black"]
+    available_colors: ["blue", "red", "orange", "yellow", "green", "black"],
+    available_territories: ['eastern_australia', 'indonesia', 'new_guinea', 'alaska', 'ontario', 'northwest_territory', 'venezuela', 'madagascar', 'north_africa', 'greenland', 'iceland', 'great_britain', 'scandinavia', 'japan', 'yakursk', 'kamchatka', 'siberia', 'ural', 'afghanistan', 'middle_east', 'india', 'siam', 'china', 'mongolia', 'irkutsk', 'ukraine', 'southern_europe', 'western_europe', 'northern_europe', 'egypt', 'east_africa', 'congo', 'south_africa', 'brazil', 'argentina', 'eastern_united_states', 'western_united_states', 'quebec', 'central_america', 'peru', 'western_australia', 'alberta']
 }//6 players,
     
 
@@ -14,7 +15,7 @@ const playerChangeReducer = function(state=initialPlayerState, action){
     const playerList = _.cloneDeep(state.playerList)
     const turn_stack = _.cloneDeep(state.turn_stack)
     const available_colors = _.cloneDeep(state.available_colors)
-    let player;
+    let player, _player;
     switch(action.type){
         case 'PLAYER_CHANGE/ADD':
             player = _.cloneDeep(action.player)
@@ -45,7 +46,8 @@ const playerChangeReducer = function(state=initialPlayerState, action){
         case 'PLAYER_CHANGE/ATTACK':
             return {...state}
         case 'PLAYER_CHANGE/PLACE_ARMIES':
-            player = {...action.player, army: {INFANTRY: action.player.INFANTRY - action.infrantry, CAVALRY: action.player.CAVALRY - action.cavalry, ARTILLERY: action.player.ARTILLERY - action.artillery}}
+            _player = playerList[turn_stack[0]-1]
+            player = {..._player, army: {INFANTRY: _player.INFANTRY - action.infrantry, CAVALRY: _player.CAVALRY - action.cavalry, ARTILLERY: _player.ARTILLERY - action.artillery}}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList}
         case 'PLAYER_CHANGE/ELIMINATED':
@@ -55,18 +57,23 @@ const playerChangeReducer = function(state=initialPlayerState, action){
         case 'PLAYER_CHANGE/ADD_CARD':
             return {...state}
         case 'PLAYER_CHANGE/SELECT_TERRITORY':
-            player = {...action.player, army: {INFANTRY: action.player.INFANTRY - 1, CAVALRY: action.player.CAVALRY, ARTILLERY: action.player.ARTILLERY}, territories: action.player.territories.concat(action.territory)}
+            if(!(state.available_territories.includes(action.territory))){
+                return {...state}
+            }
+            _player = playerList[turn_stack[0]-1]
+            player = {..._player, army: {INFANTRY: _player.INFANTRY - 1, CAVALRY: _player.CAVALRY, ARTILLERY: _player.ARTILLERY}, territories: _player.territories.concat(action.territory)}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList}
         case 'PLAYER_CHANGE/CONQUER_TERRITORY':
-            player = {...action.player, army: {INFANTRY: action.player.INFANTRY - 1, CAVALRY: action.player.CAVALRY, ARTILLERY: action.player.ARTILLERY}, territories: action.player.territories.concat(action.territory)}
+            _player = playerList[turn_stack[0]-1]
+            player = {..._player, army: {INFANTRY: _player.INFANTRY - action.infrantry, CAVALRY: _player.CAVALRY - action.cavalry, ARTILLERY: _player.ARTILLERY - action.artillery}, territories: _player.territories.concat(action.territory)}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList}
         case 'NOOP':
         case 'TURN_CHANGE':
             let _next = turn_stack.shift()
             turn_stack.push(_next)
-            return {...state, turn_stack: action.turn_stack}
+            return {...state, turn_stack: turn_stack}
         default:
             return state
     }

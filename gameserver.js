@@ -151,7 +151,7 @@ GameServer.prototype = {
     startGame : function(){
         this._state = "Running"
         this.game.initialize()
-        this.messageAll(JSON.stringify({type: "STATUS/SET", status: "INITIALIZED"}))
+        this.messageAll(JSON.stringify({type: "STATUS/SET", status: "INITIAL_ARMY_PLACEMENT"}))
         this.messageAll(JSON.stringify({type: "PLAYER_CHANGE/INITIALIZE_ALL"}))
     },
 }
