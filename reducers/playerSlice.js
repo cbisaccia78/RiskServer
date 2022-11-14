@@ -28,12 +28,12 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             }
             playerList[assignedSeat-1] = player
             available_colors.splice(available_colors.indexOf(player.color), 1)
-            return {playerList: playerList, turn_stack: utils.insertTurn(turn_stack, assignedSeat), available_colors: available_colors}
+            return {...state, playerList: playerList, turn_stack: utils.insertTurn(turn_stack, assignedSeat), available_colors: available_colors}
         case 'PLAYER_CHANGE/REMOVE':
             const pos = action.player.table_position
             playerList[pos-1] = null
             available_colors.push(action.player.color)
-            return {playerList: playerList, turn_stack: utils.deleteTurn(turn_stack, pos), available_colors: available_colors}
+            return {...state, playerList: playerList, turn_stack: utils.deleteTurn(turn_stack, pos), available_colors: available_colors}
         case 'PLAYER_CHANGE/INITIALIZE':
             const numInfantry = 40 - (action.table_size - 2)*5
             player = {...action.player, army: {INFANTRY: numInfantry, CAVALRY: 0, ARTILLERY: 0}}
@@ -60,10 +60,12 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             if(!(state.available_territories.includes(action.territory))){
                 return {...state}
             }
+            let available_territories = _.cloneDeep(state.available_territories)
+            available_territories.splice(available_territories.indexOf(action.territory), 1)
             _player = playerList[turn_stack[0]-1]
             player = {..._player, army: {INFANTRY: _player.INFANTRY - 1, CAVALRY: _player.CAVALRY, ARTILLERY: _player.ARTILLERY}, territories: _player.territories.concat(action.territory)}
             playerList[player.table_position-1] = player
-            return {...state, playerList: playerList}
+            return {...state, playerList: playerList, available_territories: available_territories}
         case 'PLAYER_CHANGE/CONQUER_TERRITORY':
             _player = playerList[turn_stack[0]-1]
             player = {..._player, army: {INFANTRY: _player.INFANTRY - action.infrantry, CAVALRY: _player.CAVALRY - action.cavalry, ARTILLERY: _player.ARTILLERY - action.artillery}, territories: _player.territories.concat(action.territory)}
