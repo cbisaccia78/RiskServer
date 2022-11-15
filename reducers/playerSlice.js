@@ -36,7 +36,7 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             return {...state, playerList: playerList, turn_stack: utils.deleteTurn(turn_stack, pos), available_colors: available_colors}
         case 'PLAYER_CHANGE/INITIALIZE':
             const numInfantry = 40 - (action.table_size - 2)*5
-            player = {...action.player, army: {INFANTRY: numInfantry, CAVALRY: 0, ARTILLERY: 0}}
+            player = {...action.player, army: numInfantry, territories: new Map()}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList}
         case 'PLAYER_CHANGE/FORTIFY':
@@ -47,7 +47,7 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             return {...state}
         case 'PLAYER_CHANGE/PLACE_ARMIES':
             _player = playerList[turn_stack[0]-1]
-            player = {..._player, army: {INFANTRY: _player.INFANTRY - action.infrantry, CAVALRY: _player.CAVALRY - action.cavalry, ARTILLERY: _player.ARTILLERY - action.artillery}}
+            player = {..._player, army: _player.army - action.count}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList}
         case 'PLAYER_CHANGE/ELIMINATED':
@@ -63,12 +63,15 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             let available_territories = _.cloneDeep(state.available_territories)
             available_territories.splice(available_territories.indexOf(action.territory), 1)
             _player = playerList[turn_stack[0]-1]
-            player = {..._player, army: {INFANTRY: _player.INFANTRY - 1, CAVALRY: _player.CAVALRY, ARTILLERY: _player.ARTILLERY}, territories: _player.territories.concat(action.territory)}
+            let territories = _.cloneDeep(_player.territories)
+            let prev = territories.get(action.territory)
+            territories.set(action.territory, prev ? prev + 1 : 1)
+            player = {..._player, army: _player.army - 1, territories: territories}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList, available_territories: available_territories}
         case 'PLAYER_CHANGE/CONQUER_TERRITORY':
             _player = playerList[turn_stack[0]-1]
-            player = {..._player, army: {INFANTRY: _player.INFANTRY - action.infrantry, CAVALRY: _player.CAVALRY - action.cavalry, ARTILLERY: _player.ARTILLERY - action.artillery}, territories: _player.territories.concat(action.territory)}
+            player = {..._player, army: _player.army - action.count, territories: _player.territories.concat(action.territory)}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList}
         case 'NOOP':
