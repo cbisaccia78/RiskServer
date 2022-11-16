@@ -45,11 +45,15 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             return {...state}
         case 'PLAYER_CHANGE/ATTACK':
             return {...state}
-        case 'PLAYER_CHANGE/PLACE_ARMIES':
+        case 'PLAYER_CHANGE/PLACE_ARMIES':{
+            //gameState.status == "INITIAL_ARMY_PLACEMENT" && gameState.players.playerList[gameState.players.turn_stack[0]].territories.has(lastClicked)
             _player = playerList[turn_stack[0]-1]
-            player = {..._player, army: _player.army - action.count}
+            let territories = _.cloneDeep(_player.territories)
+            let prev = territories.get(action.territory)
+            territories.set(action.territory, prev ? prev + action.count : action.count)
+            player = {..._player, army: _player.army - action.count, territories: territories}
             playerList[player.table_position-1] = player
-            return {...state, playerList: playerList}
+            return {...state, playerList: playerList}}
         case 'PLAYER_CHANGE/ELIMINATED':
             return {...state}
         case 'PLAYER_CHANGE/ELIMINATOR':

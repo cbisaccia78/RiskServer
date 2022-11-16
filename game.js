@@ -31,8 +31,8 @@ Game.prototype = {
         this._unsubscribe = this._store.subscribe(()=>{
             let _state = this._store.getState()
             console.log('State after dispatch: ', _state)
-            if(_state.status == "INITIAL_ARMY_PLACEMENT" && _state.players.available_territories.length == 0){
-                //we done baby!!!!!
+            if(_state.status == "INITIAL_ARMY_PLACEMENT" && _state.players.available_territories.length == 0 && this.getPlayers().every(player=>player.army == 0)){
+                this._store.dispatch({type: 'STATUS/SET', status: 'POST_SETUP'})
             }
         })
     },
@@ -65,10 +65,10 @@ Game.prototype = {
         return this.getState().players.turn_stack
     },
     getPlayers : function(){
-        return this.getState().players.playerList
+        return this.getState().players.playerList.filter(player=>player != null)
     },
     getNumPlayers : function(){
-        return this.getPlayers().filter(player=>player != null).length
+        return this.getPlayers().length
     },
     handleAction : function(action){
         this._store.dispatch({...action, gameStatus: this.getStatus()})
@@ -81,7 +81,7 @@ Game.prototype = {
             this._store.dispatch({//
                 type: "PLAYER_CHANGE/INITIALIZE",
                 player: player,
-                table_size: p.length
+                table_size: this.getTurnStack().length
             })
         }.bind(this))
         this._store.dispatch({type: "STATUS/SET", status: "INITIAL_ARMY_PLACEMENT"})

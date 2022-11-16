@@ -78,8 +78,13 @@ GameServer.prototype = {
                     case 'ACTION':
                         console.log('action')
                         if(this._userIds.has(msg.user_id) && loggedInAndAuthorized && this.game.peekFront().id == msg.user_id){
+                            let prevStatus = this.game.getStatus()
                             this.game.handleAction(msg.action)
                             this._notifyAll(JSON.stringify(msg)) //make sure clients update their state
+                            let newStatus = this.game.getStatus()
+                            if(newStatus != prevStatus){
+                                this._notifyAll(JSON.stringify({type: "STATUS/SET", status: newStatus}))
+                            }
                         }
                         break
                         
