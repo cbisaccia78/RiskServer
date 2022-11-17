@@ -6,7 +6,8 @@ const initialPlayerState = {
     playerList: [null,null,null,null,null,null],
     turn_stack: [], 
     available_colors: ["blue", "red", "orange", "yellow", "green", "black"],
-    available_territories: ['eastern_australia', 'indonesia', 'new_guinea', 'alaska', 'ontario', 'northwest_territory', 'venezuela', 'madagascar', 'north_africa', 'greenland', 'iceland', 'great_britain', 'scandinavia', 'japan', 'yakursk', 'kamchatka', 'siberia', 'ural', 'afghanistan', 'middle_east', 'india', 'siam', 'china', 'mongolia', 'irkutsk', 'ukraine', 'southern_europe', 'western_europe', 'northern_europe', 'egypt', 'east_africa', 'congo', 'south_africa', 'brazil', 'argentina', 'eastern_united_states', 'western_united_states', 'quebec', 'central_america', 'peru', 'western_australia', 'alberta']
+    available_territories: ['eastern_australia', 'indonesia', 'new_guinea', 'alaska', 'ontario', 'northwest_territory', 'venezuela', 'madagascar', 'north_africa', 'greenland', 'iceland', 'great_britain', 'scandinavia', 'japan', 'yakursk', 'kamchatka', 'siberia', 'ural', 'afghanistan', 'middle_east', 'india', 'siam', 'china', 'mongolia', 'irkutsk', 'ukraine', 'southern_europe', 'western_europe', 'northern_europe', 'egypt', 'east_africa', 'congo', 'south_africa', 'brazil', 'argentina', 'eastern_united_states', 'western_united_states', 'quebec', 'central_america', 'peru', 'western_australia', 'alberta'],
+    available_secrets: ["capture Europe, Australia and one other continent","capture Europe, South America and one other continent","capture North America and Africa","capture Asia and South America","capture North America and Australia","capture 24 territories","destroy all armies of a named opponent or, in the case of being the named player oneself, to capture 24 territories","capture 18 territories and occupy each with two troops"]
 }//6 players,
     
 
@@ -36,9 +37,11 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             return {...state, playerList: playerList, turn_stack: utils.deleteTurn(turn_stack, pos), available_colors: available_colors}
         case 'PLAYER_CHANGE/INITIALIZE':
             const numInfantry = 40 - (action.table_size - 2)*5
-            player = {...action.player, army: numInfantry, territories: new Map()}
+            const available_secrets = _.cloneDeep(state.available_secrets)
+            const secretIndex = Math.floor(Math.random()*available_secrets.length)
+            player = {...action.player, army: numInfantry, territories: new Map(), secretMission: available_secrets.splice(secretIndex, 1)}
             playerList[player.table_position-1] = player
-            return {...state, playerList: playerList}
+            return {...state, playerList: playerList, available_secrets: available_secrets}
         case 'PLAYER_CHANGE/FORTIFY':
             return {...state}
         case 'PLAYER_CHANGE/REDEEM':

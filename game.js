@@ -2,6 +2,7 @@ const { configureStore, combineReducers} = require("@reduxjs/toolkit")
 const deckReducer = require("./reducers/deckSlice")
 const playerChangeReducer = require("./reducers/playerSlice")
 const statusReducer = require("./reducers/statusSlice")
+const Continents = require("./utils/Continents")
 const _ = require("lodash")
 
 
@@ -33,6 +34,18 @@ Game.prototype = {
             console.log('State after dispatch: ', _state)
             if(_state.status == "INITIAL_ARMY_PLACEMENT" && _state.players.available_territories.length == 0 && this.getPlayers().every(player=>player.army == 0)){
                 this._store.dispatch({type: 'STATUS/SET', status: 'POST_SETUP'})
+            }else if(_state.status == 'POST_SETUP'){
+                //check win con
+                var winner = false, playerWinner = null
+                this.getPlayers.forEach(player=>{
+                    if(this.winCon(player)){
+                        winner = true
+                        playerWinner = player
+                    }
+                })
+                if(winner){
+                    this._store.dispatch({type: "STATUS/SET", status: "GAME_OVER", winner: playerWinner})
+                }
             }
         })
     },
@@ -54,6 +67,37 @@ Game.prototype = {
             type: "PLAYER_CHANGE/REMOVE",
             player: player
         })
+    },
+    winCon : function(player){
+        let restOfWorld = _.cloneDeep(Continents)
+        switch(player.secretMission){
+            case "capture Europe, Australia and one other continent":
+                return Continents.Europe.reduce((prev=true, curr)=>prev && player.territories.has(curr)) &&
+                        Continents.Australia.reduce((prev=true, curr)=>prev && player.territories.has(curr)) &&
+                        restOfWorld.values().some(continent=>continent.reduce((prev=true, curr)=>prev && player.territories.has(curr)))
+            case "capture Europe, South America and one other continent":
+                return Continents.Europe.reduce((prev=true, curr)=>prev && player.territories.has(curr)) &&
+                        Continents.SouthAmerica.reduce((prev=true, curr)=>prev && player.territories.has(curr)) &&
+                        restOfWorld.values().some(continent=>continent.reduce((prev=true, curr)=>prev && player.territories.has(curr)))
+            case "capture North America and Africa":
+                return Continents.NorthAmerica.reduce((prev=true, curr)=>prev && player.territories.has(curr)) &&
+                Continents.Africa.reduce((prev=true, curr)=>prev && player.territories.has(curr)) 
+            case "capture Asia and South America":
+                return Continents.Asia.reduce((prev=true, curr)=>prev && player.territories.has(curr)) &&
+                Continents.SouthAmerica.reduce((prev=true, curr)=>prev && player.territories.has(curr)) 
+            case "capture North America and Australia":
+                return Continents.NorthAmerica.reduce((prev=true, curr)=>prev && player.territories.has(curr)) &&
+                Continents.Australia.reduce((prev=true, curr)=>prev && player.territories.has(curr)) 
+            case "capture 24 territories":
+                return player.territories.size >= 24
+            case "destroy all armies of a named opponent or, in the case of being the named player oneself, to capture 24 territories":
+                return
+            case "capture 18 territories and occupy each with two troops":
+                Array.from(player.territories.values()).reduce((prev=0, curr)=>prev + curr > 2 ? 1 : 0)
+            default:
+                return false
+        }
+        
     },
     isEmpty : function(){
         return this.getNumPlayers() == 0
