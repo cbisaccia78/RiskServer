@@ -2,7 +2,7 @@ const { configureStore, combineReducers} = require("@reduxjs/toolkit")
 const deckReducer = require("./reducers/deckSlice")
 const playerChangeReducer = require("./reducers/playerSlice")
 const statusReducer = require("./reducers/statusSlice")
-const Continents = require("./utils/Continents")
+const {Continents, ContinentCount} = require("./utils/Continents")
 const _ = require("lodash")
 
 
@@ -32,18 +32,24 @@ Game.prototype = {
         this._unsubscribe = this._store.subscribe(()=>{
             let _state = this._store.getState()
             console.log('State after dispatch: ', _state)
-            if(_state.status == "INITIAL_ARMY_PLACEMENT" && _state.players.available_territories.length == 0 && this.getPlayers().every(player=>player.army == 0)){
+            let players = this.getPlayers()
+            if(_state.status == "INITIAL_ARMY_PLACEMENT" && _state.players.available_territories.length == 0 && players.every(player=>player.army == 0)){
+                this.queuedMessages.push({type: 'STATUS/SET', status: 'POST_SETUP'})
                 this._store.dispatch({type: 'STATUS/SET', status: 'POST_SETUP'})
+                let newCount = this.getFortifyCount(this.peekFront())
+                this.queuedMessages.push({type:"PLAYER_CHANGE/FORTIFY", count: newCount})
+                this._store.dispatch({type:"PLAYER_CHANGE/FORTIFY", count: newCount})
             }else if(_state.status == 'POST_SETUP'){
                 //check win con
                 var winner = false, playerWinner = null
-                this.getPlayers.forEach(player=>{
+                this.getPlayers().forEach(player=>{
                     if(this.winCon(player)){
                         winner = true
                         playerWinner = player
                     }
                 })
                 if(winner){
+                    this.queuedMessages.push({type: "STATUS/SET", status: "GAME_OVER", winner: playerWinner})
                     this._store.dispatch({type: "STATUS/SET", status: "GAME_OVER", winner: playerWinner})
                 }
             }
@@ -56,6 +62,7 @@ Game.prototype = {
         ************
     */
     id: null,
+    queuedMessages: [],
     addPlayer : function(player){
         this._store.dispatch({
             type: "PLAYER_CHANGE/ADD",
@@ -72,28 +79,28 @@ Game.prototype = {
         let restOfWorld = _.cloneDeep(Continents)
         switch(player.secretMission){
             case "capture Europe, Australia and one other continent":
-                return Continents.Europe.reduce((prev=true, curr)=>prev && player.territories.has(curr)) &&
-                        Continents.Australia.reduce((prev=true, curr)=>prev && player.territories.has(curr)) &&
-                        restOfWorld.values().some(continent=>continent.reduce((prev=true, curr)=>prev && player.territories.has(curr)))
+                return Continents.Europe.reduce((prev, curr)=>prev && player.territories.has(curr), true) &&
+                        Continents.Australia.reduce((prev, curr)=>prev && player.territories.has(curr), true) &&
+                        Object.values(restOfWorld).some(continent=>continent.reduce((prev, curr)=>prev && player.territories.has(curr), true))
             case "capture Europe, South America and one other continent":
-                return Continents.Europe.reduce((prev=true, curr)=>prev && player.territories.has(curr)) &&
-                        Continents.SouthAmerica.reduce((prev=true, curr)=>prev && player.territories.has(curr)) &&
-                        restOfWorld.values().some(continent=>continent.reduce((prev=true, curr)=>prev && player.territories.has(curr)))
+                return Continents.Europe.reduce((prev, curr)=>prev && player.territories.has(curr), true) &&
+                        Continents.SouthAmerica.reduce((prev, curr)=>prev && player.territories.has(curr), true) &&
+                        Object.values(restOfWorld).some(continent=>continent.reduce((prev, curr)=>prev && player.territories.has(curr), true))
             case "capture North America and Africa":
-                return Continents.NorthAmerica.reduce((prev=true, curr)=>prev && player.territories.has(curr)) &&
-                Continents.Africa.reduce((prev=true, curr)=>prev && player.territories.has(curr)) 
+                return Continents.NorthAmerica.reduce((prev, curr)=>prev && player.territories.has(curr), true) &&
+                Continents.Africa.reduce((prev, curr)=>prev && player.territories.has(curr), true) 
             case "capture Asia and South America":
-                return Continents.Asia.reduce((prev=true, curr)=>prev && player.territories.has(curr)) &&
-                Continents.SouthAmerica.reduce((prev=true, curr)=>prev && player.territories.has(curr)) 
+                return Continents.Asia.reduce((prev, curr)=>prev && player.territories.has(curr), true) &&
+                Continents.SouthAmerica.reduce((prev, curr)=>prev && player.territories.has(curr), true) 
             case "capture North America and Australia":
-                return Continents.NorthAmerica.reduce((prev=true, curr)=>prev && player.territories.has(curr)) &&
-                Continents.Australia.reduce((prev=true, curr)=>prev && player.territories.has(curr)) 
+                return Continents.NorthAmerica.reduce((prev, curr)=>prev && player.territories.has(curr), true) &&
+                Continents.Australia.reduce((prev, curr)=>prev && player.territories.has(curr), true) 
             case "capture 24 territories":
                 return player.territories.size >= 24
             case "destroy all armies of a named opponent or, in the case of being the named player oneself, to capture 24 territories":
                 return
             case "capture 18 territories and occupy each with two troops":
-                Array.from(player.territories.values()).reduce((prev=0, curr)=>prev + curr > 2 ? 1 : 0)
+                Array.from(player.territories.values()).reduce((prev, curr)=>prev + curr > 2 ? 1 : 0, 0)
             default:
                 return false
         }
@@ -113,6 +120,16 @@ Game.prototype = {
     },
     getNumPlayers : function(){
         return this.getPlayers().length
+    },
+    getFortifyCount : function(player){
+        const min = Math.floor(player.territories.size / 3) 
+        const base = min > 3 ? min : 3
+        var extraCountries = 0
+        Object.entries(Continents).forEach(keyVal=>{
+            let [continent, territories] = [...keyVal]
+            extraCountries += territories.reduce((prev, curr)=>prev && player.territories.has(curr), true) ? ContinentCount[continent] : 0 
+        })
+        return base + extraCountries
     },
     handleAction : function(action){
         this._store.dispatch({...action, gameStatus: this.getStatus()})
@@ -158,7 +175,7 @@ Game.prototype = {
     },
     peekFront : function(){
         let ts = this.getTurnStack()
-        return ts.length ? this.getPlayers().filter((player)=>player && player.table_position==ts[0])[0] : null
+        return ts.length ? this.getPlayers()[ts[0] - 1] : null
     },
 }
 

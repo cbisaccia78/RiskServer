@@ -43,7 +43,10 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList, available_secrets: available_secrets}
         case 'PLAYER_CHANGE/FORTIFY':
-            return {...state}
+            _player = playerList[turn_stack[0]-1]
+            player = {..._player, army: _player.army + action.count}
+            playerList[player.table_position-1] = player
+            return {...state, playerList: playerList}
         case 'PLAYER_CHANGE/REDEEM':
             return {...state}
         case 'PLAYER_CHANGE/ATTACK':
