@@ -36,8 +36,10 @@ Game.prototype = {
             if(_state.status == "INITIAL_ARMY_PLACEMENT" && _state.players.available_territories.length == 0 && players.every(player=>player.army == 0)){
                 this.queuedMessages.push({type: 'STATUS/SET', status: 'POST_SETUP'})
                 this._store.dispatch({type: 'STATUS/SET', status: 'POST_SETUP'})
+                this.queuedMessages.push({type: "ACTION", action: {type: "TURN_CHANGE"}})
+                this._store.dispatch({type:"TURN_CHANGE"})
                 let newCount = this.getFortifyCount(this.peekFront())
-                this.queuedMessages.push({type:"PLAYER_CHANGE/FORTIFY", count: newCount})
+                this.queuedMessages.push({type: "ACTION", action:{type:"PLAYER_CHANGE/FORTIFY", count: newCount}})
                 this._store.dispatch({type:"PLAYER_CHANGE/FORTIFY", count: newCount})
             }else if(_state.status == 'POST_SETUP'){
                 //check win con
@@ -132,7 +134,21 @@ Game.prototype = {
         return base + extraCountries
     },
     handleAction : function(action){
-        this._store.dispatch({...action, gameStatus: this.getStatus()})
+        let status = this.getStatus()
+        this._store.dispatch({...action, gameStatus: status})
+        switch(action.type){
+            case "PLAYER_CHANGE/SELECT_TERRITORY":
+                this._store.dispatch({type: "TURN_CHANGE"})
+                this.queuedMessages.push({type: "ACTION", action: {type: "TURN_CHANGE"}})
+                break
+            case "PLAYER_CHANGE/PLACE_ARMIES":
+                if(status == "INITIAL_ARMY_PLACEMENT"){
+                    this._store.dispatch({type: "TURN_CHANGE"})
+                    this.queuedMessages.push({type: "ACTION", action: {type: "TURN_CHANGE"}})
+                }
+            default:
+                break
+        }
     },
     initialize : function(){
         console.log("started");
