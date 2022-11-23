@@ -39,8 +39,8 @@ Game.prototype = {
                 this.queuedMessages.push({type: "ACTION", action: {type: "TURN_CHANGE"}})
                 this._store.dispatch({type:"TURN_CHANGE"})
                 let newCount = this.getFortifyCount(this.peekFront())
-                this.queuedMessages.push({type: "ACTION", action:{type:"PLAYER_CHANGE/FORTIFY", count: newCount}})
-                this._store.dispatch({type:"PLAYER_CHANGE/FORTIFY", count: newCount})
+                this.queuedMessages.push({type: "ACTION", action:{type:"PLAYER_CHANGE/DRAFT_TROOPS", count: newCount}})
+                this._store.dispatch({type:"PLAYER_CHANGE/DRAFT_TROOPS", count: newCount})
             }else if(_state.status == 'POST_SETUP'){
                 //check win con
                 var winner = false, playerWinner = null
@@ -132,6 +132,10 @@ Game.prototype = {
             extraCountries += territories.reduce((prev, curr)=>prev && player.territories.has(curr), true) ? ContinentCount[continent] : 0 
         })
         return base + extraCountries
+    },
+    getRedemption : function(){
+        let c = this.getRedeemCount()
+        return c > 6 ? 15 + (c-6)*5 : 4 + c*2
     },
     handleAction : function(action){
         let status = this.getStatus()

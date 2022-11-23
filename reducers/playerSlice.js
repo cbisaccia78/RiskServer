@@ -7,7 +7,8 @@ const initialPlayerState = {
     turn_stack: [], 
     available_colors: ["blue", "red", "orange", "yellow", "green", "black"],
     available_territories: ['eastern_australia', 'indonesia', 'new_guinea', 'alaska', 'ontario', 'northwest_territory', 'venezuela', 'madagascar', 'north_africa', 'greenland', 'iceland', 'great_britain', 'scandinavia', 'japan', 'yakursk', 'kamchatka', 'siberia', 'ural', 'afghanistan', 'middle_east', 'india', 'siam', 'china', 'mongolia', 'irkutsk', 'ukraine', 'southern_europe', 'western_europe', 'northern_europe', 'egypt', 'east_africa', 'congo', 'south_africa', 'brazil', 'argentina', 'eastern_united_states', 'western_united_states', 'quebec', 'central_america', 'peru', 'western_australia', 'alberta'],
-    available_secrets: ["capture Europe, Australia and one other continent","capture Europe, South America and one other continent","capture North America and Africa","capture Asia and South America","capture North America and Australia","capture 24 territories","destroy all armies of a named opponent or, in the case of being the named player oneself, to capture 24 territories","capture 18 territories and occupy each with two troops"]
+    available_secrets: ["capture Europe, Australia and one other continent","capture Europe, South America and one other continent","capture North America and Africa","capture Asia and South America","capture North America and Australia","capture 24 territories","destroy all armies of a named opponent or, in the case of being the named player oneself, to capture 24 territories","capture 18 territories and occupy each with two troops"],
+    available_territory_cards: ['eastern_australia', 'indonesia', 'new_guinea', 'alaska', 'ontario', 'northwest_territory', 'venezuela', 'madagascar', 'north_africa', 'greenland', 'iceland', 'great_britain', 'scandinavia', 'japan', 'yakursk', 'kamchatka', 'siberia', 'ural', 'afghanistan', 'middle_east', 'india', 'siam', 'china', 'mongolia', 'irkutsk', 'ukraine', 'southern_europe', 'western_europe', 'northern_europe', 'egypt', 'east_africa', 'congo', 'south_africa', 'brazil', 'argentina', 'eastern_united_states', 'western_united_states', 'quebec', 'central_america', 'peru', 'western_australia', 'alberta', 'wildcard1', 'wildcard2'], 
 }//6 players,
     
 
@@ -39,18 +40,24 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             const numInfantry = 40 - (action.table_size - 2)*5
             const available_secrets = _.cloneDeep(state.available_secrets)
             const secretIndex = Math.floor(Math.random()*available_secrets.length)
-            player = {...action.player, army: numInfantry, territories: new Map(), secretMission: available_secrets.splice(secretIndex, 1)}
+            player = {...action.player, army: numInfantry, territories: new Map(), secretMission: available_secrets.splice(secretIndex, 1), territory_cards: new Set()}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList, available_secrets: available_secrets}
-        case 'PLAYER_CHANGE/FORTIFY':
+        case 'PLAYER_CHANGE/DRAFT_TROOPS':
             _player = playerList[turn_stack[0]-1]
             player = {..._player, army: _player.army + action.count}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList}
         case 'PLAYER_CHANGE/REDEEM':
-            return {...state}
+            _player = playerList[turn_stack[0]-1]
+            let diff = new Set(action.territory_cards)
+            let territory_cards = new Set([..._player.territory_cards].filter(card=>!diff.has(card)))
+            player = {..._player, army: _player.army + action.count, territory_cards: territory_cards}
+            playerList[player.table_position-1] = player
+            return {...state, playerList: playerList}
         case 'PLAYER_CHANGE/ATTACK':
-            return {...state}
+            let attackee = action.attackee
+            return {...state, playerList}
         case 'PLAYER_CHANGE/PLACE_ARMIES':{
             //gameState.status == "INITIAL_ARMY_PLACEMENT" && gameState.players.playerList[gameState.players.turn_stack[0]].territories.has(lastClicked)
             _player = playerList[turn_stack[0]-1]
@@ -60,11 +67,12 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             player = {..._player, army: _player.army - action.count, territories: territories}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList}}
+        case 'PLAYER_CHANGE/FORTIFY':{
+
+        }
         case 'PLAYER_CHANGE/ELIMINATED':
             return {...state}
         case 'PLAYER_CHANGE/ELIMINATOR':
-            return {...state}
-        case 'PLAYER_CHANGE/ADD_CARD':
             return {...state}
         case 'PLAYER_CHANGE/SELECT_TERRITORY':
             if(!(state.available_territories.includes(action.territory))){
@@ -79,11 +87,28 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             player = {..._player, army: _player.army - 1, territories: territories}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList, available_territories: available_territories}
-        case 'PLAYER_CHANGE/CONQUER_TERRITORY':
+        case 'PLAYER_CHANGE/CONQUER_TERRITORY':{
             _player = playerList[turn_stack[0]-1]
-            player = {..._player, army: _player.army - action.count, territories: _player.territories.concat(action.territory)}
+            
+            let available_territory_cards = _.cloneDeep(state.available_territory_cards)
+            let territory_cards = _.cloneDeep(_player.territory_cards)
+            let randIndex = Math.floor(Math.random()*available_territory_cards.length)
+            let randCard = available_territory_cards.splice(randIndex, 1)
+            territory_cards.push(randCard)
+            let territories = _.cloneDeep(_player.territories)
+            
+            let prev = territories.get(action.territory)
+            territories.set(action.territory, prev ? prev + action.count : action.count)
+            player = {..._player, army: _player.army - action.count, territories: territories, territory_cards: territory_cards}
             playerList[player.table_position-1] = player
-            return {...state, playerList: playerList}
+
+            let _enemy = playerList[action.enemy.table_position-1]
+            let enemyTerritories = _.cloneDeep(_enemy.territories)
+            enemyTerritories.delete(action.territory)
+            let enemy = {..._enemy, territories: enemyTerritories}
+            playerList[action.enemy.table_position-1] = enemy
+            
+            return {...state, playerList: playerList, available_territory_cards: available_territory_cards}}
         case 'NOOP':
         case 'TURN_CHANGE':
             let _next = turn_stack.shift()
