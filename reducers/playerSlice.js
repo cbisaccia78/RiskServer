@@ -55,9 +55,67 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             player = {..._player, army: _player.army + action.count, territory_cards: territory_cards}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList}
-        case 'PLAYER_CHANGE/ATTACK':
-            let attackee = action.attackee
-            return {...state, playerList}
+        case 'PLAYER_CHANGE/ATTACK':{
+            _player = playerList[turn_stack[0]-1]
+            let territories = _.cloneDeep(_player.territories)
+            let prevPlayerCount = territories.get(action.fromTerritory)
+
+            let _enemy = playerList[action.enemy.table_position-1]
+            let enemyTerritories = _.cloneDeep(_enemy.territories)
+            let prevEnemyCount = enemyTerritories.get(action.toTerritory)
+            
+            let playerRoll = [], enemyRoll = []
+            var playerLost = 0, enemyLost = 0
+            if(prevPlayerCount >= 3){
+                playerRoll.push(Math.floor(Math.random()*6 + 1))
+                playerRoll.push(Math.floor(Math.random()*6 + 1))
+                playerRoll.push(Math.floor(Math.random()*6 + 1))
+            }else if(prevPlayerCount == 2){
+                playerRoll.push(Math.floor(Math.random()*6 + 1))
+                playerRoll.push(Math.floor(Math.random()*6 + 1))
+            }else{
+                console.log("Cannot attack with less than 2 troops");
+                return {...state}
+            }
+
+            if(prevEnemyCount >= 2){
+                enemyRoll.push(Math.floor(Math.random()*6 + 1))
+                enemyRoll.push(Math.floor(Math.random()*6 + 1))
+            }else if(prevEnemyCount == 1){
+                enemyRoll.push(Math.floor(Math.random()*6 + 1))
+            }else {
+                return {...state}
+            }
+
+            playerRoll.sort((a,b)=>b-a)
+            enemyRoll.sort((a,b)=>b-a)
+            
+            if(enemyRoll[0] >= playerRoll[0]){
+                playerLost++
+            }else{
+                enemyLost++
+            }
+
+            if(prevEnemyCount > 1){
+                if(enemyRoll[1] >= playerRoll[1]){
+                    playerLost++
+                }else{
+                    enemyLost++
+                }
+            }
+            
+            
+            territories.set(action.fromTerritory, prevPlayerCount - playerLost ? prevPlayerCount - playerLost : 1)
+            player = {..._player, territories: territories}
+            playerList[player.table_position-1] = player
+
+            
+            
+            enemyTerritories.set(action.toTerritory, prevEnemyCount - enemyLost)
+            let enemy = {..._enemy, territories: enemyTerritories}
+            playerList[action.enemy.table_position-1] = enemy
+            
+            return {...state, playerList: playerList}}
         case 'PLAYER_CHANGE/PLACE_ARMIES':{
             //gameState.status == "INITIAL_ARMY_PLACEMENT" && gameState.players.playerList[gameState.players.turn_stack[0]].territories.has(lastClicked)
             _player = playerList[turn_stack[0]-1]
@@ -97,17 +155,19 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             territory_cards.push(randCard)
             let territories = _.cloneDeep(_player.territories)
             
-            let prev = territories.get(action.territory)
-            territories.set(action.territory, prev ? prev + action.count : action.count)
-            player = {..._player, army: _player.army - action.count, territories: territories, territory_cards: territory_cards}
+            let prevFrom = territories.get(action.fromTerritory)
+            let prevTo = territories.get(action.toTerritory)
+            territories.set(action.fromTerritory, prevFrom - action.count)
+            territories.set(action.toTerritory, prevTo + action.count)
+            player = {..._player, territories: territories, territory_cards: territory_cards}
             playerList[player.table_position-1] = player
 
             let _enemy = playerList[action.enemy.table_position-1]
             let enemyTerritories = _.cloneDeep(_enemy.territories)
-            enemyTerritories.delete(action.territory)
+            enemyTerritories.delete(action.toTerritory)
             let enemy = {..._enemy, territories: enemyTerritories}
             playerList[action.enemy.table_position-1] = enemy
-            
+
             return {...state, playerList: playerList, available_territory_cards: available_territory_cards}}
         case 'NOOP':
         case 'TURN_CHANGE':
