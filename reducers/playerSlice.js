@@ -58,11 +58,11 @@ const playerChangeReducer = function(state=initialPlayerState, action){
         case 'PLAYER_CHANGE/ATTACK':{
             _player = playerList[turn_stack[0]-1]
             let territories = _.cloneDeep(_player.territories)
-            let prevPlayerCount = territories.get(action.fromTerritory)
+            let prevPlayerCount = territories[action.fromTerritory]
 
             let _enemy = playerList[action.enemy.table_position-1]
             let enemyTerritories = _.cloneDeep(_enemy.territories)
-            let prevEnemyCount = enemyTerritories.get(action.toTerritory)
+            let prevEnemyCount = enemyTerritories[action.toTerritory]
             
             let playerRoll = [], enemyRoll = []
             var playerLost = 0, enemyLost = 0
@@ -105,13 +105,13 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             }
             
             
-            territories.set(action.fromTerritory, prevPlayerCount - playerLost ? prevPlayerCount - playerLost : 1)
+            territories[action.fromTerritory] =  prevPlayerCount - playerLost ? prevPlayerCount - playerLost : 1
             player = {..._player, territories: territories}
             playerList[player.table_position-1] = player
 
             
             
-            enemyTerritories.set(action.toTerritory, prevEnemyCount - enemyLost)
+            enemyTerritories[action.toTerritory] = prevEnemyCount - enemyLost
             let enemy = {..._enemy, territories: enemyTerritories}
             playerList[action.enemy.table_position-1] = enemy
             
@@ -120,8 +120,8 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             //gameState.status == "INITIAL_ARMY_PLACEMENT" && gameState.players.playerList[gameState.players.turn_stack[0]].territories.has(lastClicked)
             _player = playerList[turn_stack[0]-1]
             let territories = _.cloneDeep(_player.territories)
-            let prev = territories.get(action.territory)
-            territories.set(action.territory, prev ? prev + action.count : action.count)
+            let prev = territories[action.territory]
+            territories[action.territory] = prev ? prev + action.count : action.count
             player = {..._player, army: _player.army - action.count, territories: territories}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList}}
@@ -140,8 +140,8 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             available_territories.splice(available_territories.indexOf(action.territory), 1)
             _player = playerList[turn_stack[0]-1]
             let territories = _.cloneDeep(_player.territories)
-            let prev = territories.get(action.territory)
-            territories.set(action.territory, prev ? prev + 1 : 1)
+            let prev = territories[action.territory]
+            territories[action.territory] = prev ? prev + 1 : 1
             player = {..._player, army: _player.army - 1, territories: territories}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList, available_territories: available_territories}
@@ -155,16 +155,16 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             territory_cards.push(randCard)
             let territories = _.cloneDeep(_player.territories)
             
-            let prevFrom = territories.get(action.fromTerritory)
-            let prevTo = territories.get(action.toTerritory)
-            territories.set(action.fromTerritory, prevFrom - action.count)
-            territories.set(action.toTerritory, prevTo + action.count)
+            let prevFrom = territories[action.fromTerritory]
+            let prevTo = territories[action.toTerritory]
+            territories[action.fromTerritory] =  prevFrom - action.count
+            territories[action.toTerritory] = prevTo + action.count
             player = {..._player, territories: territories, territory_cards: territory_cards}
             playerList[player.table_position-1] = player
 
             let _enemy = playerList[action.enemy.table_position-1]
             let enemyTerritories = _.cloneDeep(_enemy.territories)
-            enemyTerritories.delete(action.toTerritory)
+            delete enemyTerritories[action.toTerritory]
             let enemy = {..._enemy, territories: enemyTerritories}
             playerList[action.enemy.table_position-1] = enemy
 
