@@ -81,28 +81,28 @@ Game.prototype = {
         let restOfWorld = _.cloneDeep(Continents)
         switch(player.secretMission){
             case "capture Europe, Australia and one other continent":
-                return Continents.Europe.reduce((prev, curr)=>prev && player.territories.has(curr), true) &&
-                        Continents.Australia.reduce((prev, curr)=>prev && player.territories.has(curr), true) &&
-                        Object.values(restOfWorld).some(continent=>continent.reduce((prev, curr)=>prev && player.territories.has(curr), true))
+                return Continents.Europe.reduce((prev, curr)=>prev && player.territories[curr] != undefined, true) &&
+                        Continents.Australia.reduce((prev, curr)=>prev && player.territories[curr] != undefined, true) &&
+                        Object.values(restOfWorld).some(continent=>continent.reduce((prev, curr)=>prev && player.territories[curr] != undefined, true))
             case "capture Europe, South America and one other continent":
-                return Continents.Europe.reduce((prev, curr)=>prev && player.territories.has(curr), true) &&
-                        Continents.SouthAmerica.reduce((prev, curr)=>prev && player.territories.has(curr), true) &&
-                        Object.values(restOfWorld).some(continent=>continent.reduce((prev, curr)=>prev && player.territories.has(curr), true))
+                return Continents.Europe.reduce((prev, curr)=>prev && player.territories[curr] != undefined, true) &&
+                        Continents.SouthAmerica.reduce((prev, curr)=>prev && player.territories[curr] != undefined, true) &&
+                        Object.values(restOfWorld).some(continent=>continent.reduce((prev, curr)=>prev && player.territories[curr] != undefined, true))
             case "capture North America and Africa":
-                return Continents.NorthAmerica.reduce((prev, curr)=>prev && player.territories.has(curr), true) &&
-                Continents.Africa.reduce((prev, curr)=>prev && player.territories.has(curr), true) 
+                return Continents.NorthAmerica.reduce((prev, curr)=>prev && player.territories[curr] != undefined, true) &&
+                Continents.Africa.reduce((prev, curr)=>prev && player.territories[curr] != undefined, true) 
             case "capture Asia and South America":
-                return Continents.Asia.reduce((prev, curr)=>prev && player.territories.has(curr), true) &&
-                Continents.SouthAmerica.reduce((prev, curr)=>prev && player.territories.has(curr), true) 
+                return Continents.Asia.reduce((prev, curr)=>prev && player.territories[curr] != undefined, true) &&
+                Continents.SouthAmerica.reduce((prev, curr)=>prev && player.territories[curr] != undefined, true) 
             case "capture North America and Australia":
-                return Continents.NorthAmerica.reduce((prev, curr)=>prev && player.territories.has(curr), true) &&
-                Continents.Australia.reduce((prev, curr)=>prev && player.territories.has(curr), true) 
+                return Continents.NorthAmerica.reduce((prev, curr)=>prev && player.territories[curr] != undefined, true) &&
+                Continents.Australia.reduce((prev, curr)=>prev && player.territories[curr] != undefined, true) 
             case "capture 24 territories":
-                return player.territories.size >= 24
+                return Object.keys(player.territories).length >= 24
             case "destroy all armies of a named opponent or, in the case of being the named player oneself, to capture 24 territories":
                 return
             case "capture 18 territories and occupy each with two troops":
-                Array.from(player.territories.values()).reduce((prev, curr)=>prev + curr > 2 ? 1 : 0, 0)
+                player.territories.values().reduce((prev, curr)=>prev + curr > 2 ? 1 : 0, 0)
             default:
                 return false
         }
@@ -124,12 +124,12 @@ Game.prototype = {
         return this.getPlayers().length
     },
     getFortifyCount : function(player){
-        const min = Math.floor(player.territories.size / 3) 
+        const min = Math.floor(Object.keys(player.territories).length / 3) 
         const base = min > 3 ? min : 3
         var extraCountries = 0
         Object.entries(Continents).forEach(keyVal=>{
             let [continent, territories] = [...keyVal]
-            extraCountries += territories.reduce((prev, curr)=>prev && player.territories.has(curr), true) ? ContinentCount[continent] : 0 
+            extraCountries += territories.reduce((prev, curr)=>prev && player.territories[curr] != undefined, true) ? ContinentCount[continent] : 0 
         })
         return base + extraCountries
     },
@@ -155,8 +155,9 @@ Game.prototype = {
                 if(status == "POST_SETUP"){
                     let enemy = this.getPlayerByPosition(action.enemy.table_position)
                     let player = this.peekFront()
-                    let toCount = enemy.territories.get(action.toTerritory) 
-                    this.queuedMessages.push({type: "ACTION", action: {...action, fromCount: player.territories.get(action.fromTerritory), toCount: toCount}})
+                    let toCount = enemy.territories[action.toTerritory] 
+                    let fromCount = player.territories[action.fromTerritory]
+                    this.queuedMessages.push({type: "ACTION", action: {...action, fromCount: fromCount, toCount: toCount}})
                     if(!toCount){
                         this.queuedMessages.push({type: "UI/CONQUER_TERRITORY",  player: player.table_position, enemy: action.enemy, fromTerritory: action.fromTerritory, toTerritory: action.toTerritory})
                     }

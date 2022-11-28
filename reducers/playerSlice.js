@@ -40,7 +40,7 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             const numInfantry = 40 - (action.table_size - 2)*5
             const available_secrets = _.cloneDeep(state.available_secrets)
             const secretIndex = Math.floor(Math.random()*available_secrets.length)
-            player = {...action.player, army: numInfantry, territories: new Map(), secretMission: available_secrets.splice(secretIndex, 1), territory_cards: new Set()}
+            player = {...action.player, army: numInfantry, territories: {}, secretMission: available_secrets.splice(secretIndex, 1), territory_cards: new Set()}
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList, available_secrets: available_secrets}
         case 'PLAYER_CHANGE/DRAFT_TROOPS':
