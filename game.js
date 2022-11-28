@@ -150,6 +150,17 @@ Game.prototype = {
                     this._store.dispatch({type: "TURN_CHANGE"})
                     this.queuedMessages.push({type: "ACTION", action: {type: "TURN_CHANGE"}})
                 }
+                break
+            case "PLAYER_CHANGE/ATTACK":
+                if(status == "POST_SETUP"){
+                    let enemy = this.getPlayerByPosition(action.enemy.table_position)
+                    let player = this.peekFront()
+                    let toCount = enemy.territories.get(action.toTerritory) 
+                    this.queuedMessages.push({type: "ACTION", action: {...action, fromCount: player.territories.get(action.fromTerritory), toCount: toCount}})
+                    if(!toCount){
+                        this.queuedMessages.push({type: "UI/CONQUER_TERRITORY",  player: player.table_position, enemy: action.enemy, fromTerritory: action.fromTerritory, toTerritory: action.toTerritory})
+                    }
+                }
             default:
                 break
         }
@@ -183,6 +194,13 @@ Game.prototype = {
             return players[0]
         }
         return null
+    },
+    getPlayerByPosition: function(pos){
+        const players = this.getPlayers().filter(player=>{return player && player.table_position==pos})
+        if(players.length !=1){
+            throw new Error("No Player found")
+        }
+        return players[0]
     },
     getPlayerPosition: function(id){
         const players = this.getPlayers().filter((player)=>player != null)

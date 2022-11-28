@@ -79,14 +79,13 @@ GameServer.prototype = {
                         console.log('action')
                         if(this._userIds.has(msg.user_id) && loggedInAndAuthorized && this.game.peekFront().id == msg.user_id){
                             this.game.handleAction(msg.action)
-                            this._notifyAll(JSON.stringify(msg)) //make sure clients update their state
+                            if(!(msg.server_action))this._notifyAll(JSON.stringify(msg)) //make sure clients update their state
                             if(this.game.queuedMessages){
                                 this.game.queuedMessages.forEach(message=>{this._notifyAll(JSON.stringify(message))})
                             }
                             this.game.queuedMessages = []
                         }
                         break
-                        
                     default:
                         console.log('default')
                         ws.send("Not sure how to respond")
