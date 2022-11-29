@@ -1,6 +1,8 @@
 const {WebSocketServer} = require("ws")
 const {userIdJWTMap, idGameMap, availableGameIDs} = require("./sessioncache")
 const Game = require("./game")
+const { DEVELOPMENT } = require("./config")
+const {sleep} = require("./utils/utils")
 
 const GameServer = function(id, connectionObject, game=null){
     this.id = id
@@ -151,11 +153,36 @@ GameServer.prototype = {
     message : function(user_id, payload={}){
         this._uidWsMap.get(user_id).send(JSON.stringify(payload))
     },
-    startGame : function(){
+    startGame : async function(){
         this._state = "Running"
         this.game.initialize()
         this.messageAll(JSON.stringify({type: "STATUS/SET", status: "INITIAL_ARMY_PLACEMENT"}))
         this.messageAll(JSON.stringify({type: "PLAYER_CHANGE/INITIALIZE_ALL"}))
+        if(DEVELOPMENT){
+            let available_territories = this.game.getState().players.available_territories
+            available_territories.forEach(async function(territory){
+                this.game.handleAction({type: 'PLAYER_CHANGE/SELECT_TERRITORY', territory: territory})
+                this._notifyAll(JSON.stringify({type: "ACTION", action: {type: 'PLAYER_CHANGE/SELECT_TERRITORY', territory: territory}})) //make sure clients update their state
+                if(this.game.queuedMessages){
+                    this.game.queuedMessages.forEach(message=>{this._notifyAll(JSON.stringify(message))})
+                }
+                this.game.queuedMessages = []
+                await sleep(200)
+            }.bind(this))
+            var status = this.game.getStatus()
+            while(status == "INITIAL_ARMY_PLACEMENT"){
+                let controlledTerritories = Object.keys(this.game.peekFront().territories) 
+                let randomTerritory = controlledTerritories[Math.floor(Math.random()*controlledTerritories.length)]
+                this.game.handleAction({type: 'PLAYER_CHANGE/PLACE_ARMIES', territory: randomTerritory, count: 1})
+                this._notifyAll(JSON.stringify({type: "ACTION", action: {type: 'PLAYER_CHANGE/PLACE_ARMIES', territory: randomTerritory, count: 1}})) //make sure clients update their state
+                if(this.game.queuedMessages){
+                    this.game.queuedMessages.forEach(message=>{this._notifyAll(JSON.stringify(message))})
+                }
+                this.game.queuedMessages = []
+                status = this.game.getStatus()
+                await sleep(100)
+            }
+        }
     },
 }
 

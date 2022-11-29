@@ -26,5 +26,7 @@ const SECRET_MISSIONS = Object.freeze({
     MISSION12 : 'mission12',
 })
 
+const DEVELOPMENT = true
 
-module.exports = {TERRITORIES, UNITS, SECRET_MISSIONS}
+
+module.exports = {TERRITORIES, UNITS, SECRET_MISSIONS, DEVELOPMENT}

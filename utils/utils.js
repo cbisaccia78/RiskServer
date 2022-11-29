@@ -9,6 +9,12 @@ const RangeList = function(start, end){
     return ret
 }
 
+const sleep = function(ms){
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms)
+    })
+}
+
 const gameURLParse = function(url){
     const broken = url.split("/")
     
@@ -103,4 +109,4 @@ const FWT = function(){
     return uuidv4()
 }
 
-module.exports = { RangeList, gameURLParse, randomObjectValue, openSeats, insertTurn, deleteTurn, FWT}
+module.exports = { RangeList, gameURLParse, randomObjectValue, openSeats, insertTurn, deleteTurn, FWT, sleep}

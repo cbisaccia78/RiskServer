@@ -31,17 +31,15 @@ Game.prototype = {
         })
         this._unsubscribe = this._store.subscribe(()=>{
             let _state = this._store.getState()
-            console.log('State after dispatch: ', _state)
+            //console.log('State after dispatch: ', _state)
             let players = this.getPlayers()
-            if(_state.status == "INITIAL_ARMY_PLACEMENT" && _state.players.available_territories.length == 0 && players.every(player=>player.army == 0)){
+            /*if(_state.status == "INITIAL_ARMY_PLACEMENT" && _state.players.available_territories.length == 0 && players.every(player=>player.army == 0)){
                 this.queuedMessages.push({type: 'STATUS/SET', status: 'POST_SETUP'})
                 this._store.dispatch({type: 'STATUS/SET', status: 'POST_SETUP'})
-                this.queuedMessages.push({type: "ACTION", action: {type: "TURN_CHANGE"}})
-                this._store.dispatch({type:"TURN_CHANGE"})
                 let newCount = this.getFortifyCount(this.peekFront())
                 this.queuedMessages.push({type: "ACTION", action:{type:"PLAYER_CHANGE/DRAFT_TROOPS", count: newCount}})
                 this._store.dispatch({type:"PLAYER_CHANGE/DRAFT_TROOPS", count: newCount})
-            }else if(_state.status == 'POST_SETUP'){
+            }else */if(_state.status == 'POST_SETUP'){
                 //check win con
                 var winner = false, playerWinner = null
                 this.getPlayers().forEach(player=>{
@@ -149,6 +147,16 @@ Game.prototype = {
                 if(status == "INITIAL_ARMY_PLACEMENT"){
                     this._store.dispatch({type: "TURN_CHANGE"})
                     this.queuedMessages.push({type: "ACTION", action: {type: "TURN_CHANGE"}})
+                    let _state = this._store.getState()
+                    //console.log('State after dispatch: ', _state)
+                    let players = this.getPlayers()
+                    if(_state.players.available_territories.length == 0 && players.every(player=>player.army == 0)){
+                        this.queuedMessages.push({type: 'STATUS/SET', status: 'POST_SETUP'})
+                        this._store.dispatch({type: 'STATUS/SET', status: 'POST_SETUP'})
+                        let newCount = this.getFortifyCount(this.peekFront())
+                        this.queuedMessages.push({type: "ACTION", action:{type:"PLAYER_CHANGE/DRAFT_TROOPS", count: newCount}})
+                        this._store.dispatch({type:"PLAYER_CHANGE/DRAFT_TROOPS", count: newCount})
+                    }
                 }
                 break
             case "PLAYER_CHANGE/ATTACK":

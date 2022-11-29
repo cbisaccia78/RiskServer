@@ -126,7 +126,7 @@ const playerChangeReducer = function(state=initialPlayerState, action){
             playerList[player.table_position-1] = player
             return {...state, playerList: playerList}}
         case 'PLAYER_CHANGE/FORTIFY':{
-
+            
         }
         case 'PLAYER_CHANGE/ELIMINATED':
             return {...state}
