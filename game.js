@@ -170,6 +170,12 @@ Game.prototype = {
                         this.queuedMessages.push({type: "UI/CONQUER_TERRITORY",  player: player.table_position, enemy: action.enemy, fromTerritory: action.fromTerritory, toTerritory: action.toTerritory})
                     }
                 }
+            case "TURN_CHANGE":
+                if(status == "POST_SETUP"){
+                    let newCount = this.getFortifyCount(this.peekFront())
+                    this.queuedMessages.push({type: "ACTION", action:{type:"PLAYER_CHANGE/DRAFT_TROOPS", count: newCount}})
+                    this._store.dispatch({type:"PLAYER_CHANGE/DRAFT_TROOPS", count: newCount})
+                }
             default:
                 break
         }
